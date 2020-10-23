@@ -226,9 +226,9 @@ export default {
           if (d.Dataset) {
             return d.Dataset
           }
-          var labelText = bSameCellLine ? d.Drug : ''
-          labelText += bSameDrug && bSameCellLine ? ' : ' : ''
-          labelText += bSameDrug ? d.CellLine : ''
+          var labelText = !bSameDrug ? d.Drug : ''
+          labelText += !bSameDrug && !bSameCellLine ? ' : ' : ''
+          labelText += !bSameCellLine ? d.CellLine : ''
           return labelText
         })
       // clickBar
