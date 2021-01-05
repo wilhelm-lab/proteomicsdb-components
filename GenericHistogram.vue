@@ -246,6 +246,7 @@ export default {
     init: function() {
       var oData = this.chartData
       if (typeof oData !== 'undefined') {
+        d3.select(this.$el).select('svg').remove()
         this.drawPlot(oData)
       }
     }
