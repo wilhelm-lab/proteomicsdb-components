@@ -45,23 +45,26 @@ export default {
   },
   data: function () {
     return {
+      minValue: 0,
+      maxValue: 1
     }
   },
   watch: {
-    /*chartData: function (newData) {
-      this.drawPlot(newData)
-    }*/
+    chartData: function () {
+      this.init()
+    },
     selectedLines: function (newSelectedLines) {
       this.drawLines(newSelectedLines)
     }
   },
   methods: {
     drawPlot: function (data) {
-      data = data.sort()
+      var sortedData = [...data]
+      sortedData.sort()
       //console.log(data)
       
-      var max = Math.max.apply(Math, data)
-      var min = Math.min.apply(Math, data)
+      this.maxValue = Math.max.apply(Math, sortedData)
+      this.minValue = Math.min.apply(Math, sortedData)
 
       // console.log(max)
       // console.log((Math.round(max*10)/10)+0.1)
@@ -75,8 +78,8 @@ export default {
       var height = this.minHeight - this.margin.top - this.margin.bottom
       
       // ceil / floor to a multiple of 0.1
-      var maxX = (Math.ceil(max / 0.1) * 0.1)
-      var minX = (Math.floor(min / 0.1) * 0.1)
+      var maxX = (Math.ceil(this.maxValue / 0.1) * 0.1)
+      var minX = (Math.floor(this.minValue / 0.1) * 0.1)
       
       // set the ranges
       var x = d3.scaleLinear()
@@ -104,7 +107,7 @@ export default {
           'translate(' + this.margin.left + ',' + this.margin.top + ')')
 
       // group the data for the bars
-      var bins = histogram(data)
+      var bins = histogram(sortedData)
 
       // Scale the range of the data in the y domain
       y.domain([0, d3.max(bins, function (d) { return d.length })])
@@ -154,7 +157,7 @@ export default {
 
       // colour median bar red
       if (this.markMedianBar) {
-        var median = this.getMedian(data)
+        var median = this.getMedian(sortedData)
         // console.log(median)
         var medBarId = this.findMedBar(maxX, minX, nclass, median)
         //console.log(medBarId)
@@ -164,15 +167,12 @@ export default {
       }
     },
     drawLines: function (oLines) {
-      var max = Math.max.apply(Math, this.chartData)
-      var min = Math.min.apply(Math, this.chartData)
-      
       var width = this.minWidth - this.margin.left - this.margin.right
       var height = this.minHeight - this.margin.top - this.margin.bottom
       
       // ceil / floor to a multiple of 0.1
-      var maxX = (Math.ceil(max / 0.1) * 0.1)
-      var minX = (Math.floor(min / 0.1) * 0.1)
+      var maxX = (Math.ceil(this.maxValue / 0.1) * 0.1)
+      var minX = (Math.floor(this.minValue / 0.1) * 0.1)
       
       var x = d3.scaleLinear()
         .domain([minX, maxX])
@@ -242,13 +242,16 @@ export default {
         }
       }
       return found
+    },
+    init: function() {
+      var oData = this.chartData
+      if (typeof oData !== 'undefined') {
+        this.drawPlot(oData)
+      }
     }
   },
   mounted: function () {
-    var oData = this.chartData
-    if (typeof oData !== 'undefined') {
-      this.drawPlot(oData)
-    }
+    this.init()
   }
 }
 </script>

@@ -565,8 +565,8 @@ export default {
    },
   
   mounted: function() {
-        this.init();
-    }
+    this.init();
+  }
 }
 </script>
 
