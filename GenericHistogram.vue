@@ -244,9 +244,9 @@ export default {
       return found
     },
     init: function() {
+      d3.select(this.$el).select('svg').remove()
       var oData = this.chartData
-      if (typeof oData !== 'undefined') {
-        d3.select(this.$el).select('svg').remove()
+      if (typeof oData !== 'undefined' && oData.length > 0) {
         this.drawPlot(oData)
       }
     }
