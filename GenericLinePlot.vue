@@ -56,9 +56,9 @@ export default {
         var min = d3.min(aDataPoints, function(d) {
             return d[0];
         });
-        var max = Math.ceil(d3.max(aDataPoints, function(d) {
+        var max = d3.max(aDataPoints, function(d) {
             return d[0];
-        }));
+        });
         var aValues = [];
 
         var minLog = Math.log10(min);
@@ -80,39 +80,62 @@ export default {
         return aData;
     },
 
-    createCurveIdDictionary: function (aProperties) {
+    createCurveStyleDictionary: function (aProperties) {
+        var color = d3.scaleOrdinal(d3.schemeCategory10);
+        
         var oDictionary = {}
         var treatmentDictionary = {}
         var numTreatments = 0
         for (var i = 0; i < aProperties.length; i++) {
             if (!(aProperties[i].TREATMENT in treatmentDictionary)) {
-              treatmentDictionary[aProperties[i].TREATMENT] = ++numTreatments
+              treatmentDictionary[aProperties[i].TREATMENT] = [++numTreatments, 0]
             }
-            oDictionary[aProperties[i].curveId] = treatmentDictionary[aProperties[i].TREATMENT];
+            
+            var x = aProperties[i].biologicalReplicate;
+            var dash = x * 3 + ',' + (x - 1) * 3;
+            
+            oDictionary[aProperties[i].curveId] = { 
+              color : color(treatmentDictionary[aProperties[i].TREATMENT][0]), 
+              dash : dash, 
+              marker : d3.symbol().type(d3.symbols[treatmentDictionary[aProperties[i].TREATMENT][1] % 6])()
+            }
+            treatmentDictionary[aProperties[i].TREATMENT][1]++
         }
         return oDictionary;
     },
 
     highlightMouseOver: function (sId, x, y) {
-        d3.select('#errorLine-' + sId).attr('class', 'highlightLines');
-        d3.select('#legendLine-' + sId).attr('class', 'highlightLines');
-        d3.select('#plotLine-' + sId).attr('class', 'highlightLines');
-        d3.select('#legendText-' + sId).attr('font-weight', 'bold');
-        d3.selectAll('#dots-' + sId).attr('transform', function(d) {
+        d3.select('#errorLine-' + sId)
+          .attr('class', 'highlightLines');
+        d3.select('#legendLine-' + sId)
+          .attr('class', 'highlightLines');
+        d3.select('#plotLine-' + sId)
+          .attr('class', 'highlightLines');
+        d3.select('#legendText-' + sId)
+          .attr('font-weight', 'bold');
+        d3.selectAll('#dots-' + sId)
+          .attr('transform', function(d) {
             return 'translate(' + x(d.x) + ',' + y(d.y) + ') scale(1)';
-        });
-        d3.selectAll('#dotsLegend-' + sId).attr('transform', 'translate(' + 25 / 2 + ',' + 10 / 2 + ') scale(1)'); // sry for hard coding
+          });
+        d3.selectAll('#dotsLegend-' + sId)
+          .attr('transform', 'translate(' + 25 / 2 + ',' + 10 / 2 + ') scale(1)'); // sry for hard coding
     },
 
     unHighlightMouseOver: function (sId, x, y) {
-        d3.select('#errorLine-' + sId).attr('class', 'lines');
-        d3.select('#legendLine-' + sId).attr('class', 'lines');
-        d3.select('#plotLine-' + sId).attr('class', 'lines');
-        d3.select('#legendText-' + sId).attr('font-weight', 'normal');
-        d3.selectAll('#dots-' + sId).attr('transform', function(d) {
+        d3.select('#errorLine-' + sId)
+          .attr('class', 'lines');
+        d3.select('#legendLine-' + sId)
+          .attr('class', 'lines');
+        d3.select('#plotLine-' + sId)
+          .attr('class', 'lines');
+        d3.select('#legendText-' + sId)
+          .attr('font-weight', 'normal');
+        d3.selectAll('#dots-' + sId)
+          .attr('transform', function(d) {
             return 'translate(' + x(d.x) + ',' + y(d.y) + ') scale(0.75)';
-        });
-        d3.selectAll('#dotsLegend-' + sId).attr('transform', 'translate(' + 25 / 2 + ',' + 10 / 2 + ') scale(0.75)');
+          });
+        d3.selectAll('#dotsLegend-' + sId)
+          .attr('transform', 'translate(' + 25 / 2 + ',' + 10 / 2 + ') scale(0.75)');
     },
 
     drawPlot: function (aData, aPoints, aProperties, aParameters) {
@@ -121,11 +144,13 @@ export default {
         // aPoints are the plotted measurements
         var that = this;
 
-        var oColorMapping = this.createCurveIdDictionary(aProperties);
+        var oCurveStyleMapping = this.createCurveStyleDictionary(aProperties);
+        this.$emit('update-curve-styles', oCurveStyleMapping)
+        
         var margin = {
             top: 40,
             right: 250,
-            bottom: 80,
+            bottom: 50,
             left: 50
         };
 
@@ -159,8 +184,6 @@ export default {
         });
         var y = d3.scaleLinear().domain([0, yMaxPoints > yMaxCurve ? yMaxPoints : yMaxCurve]).range([height, 0]).nice();
 
-        var color = d3.scaleOrdinal(d3.schemeCategory10);
-
         var xAxis = d3.axisBottom(x).ticks(8, function ticks(digit) {
             return digit;
         });
@@ -180,33 +203,46 @@ export default {
 
         this.svg = svg;
 
-        svg = svg.append('g').attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+        svg = svg.append('g')
+          .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
 
-        svg.append('g').attr('class', 'x axis').attr('transform', 'translate(0,' + height + ')').call(xAxis);
+        svg.append('g')
+          .attr('class', 'x axis')
+          .attr('transform', 'translate(0,' + height + ')')
+          .call(xAxis);
 
-        svg.append('g').attr('class', 'y axis').call(yAxis);
+        svg.append('g')
+          .attr('class', 'y axis')
+          .call(yAxis);
 
         // Lines - color for different treatments, dash style for different biological replicates
-
-        svg.append('g').attr('class', 'lines').selectAll('.line').data(aData).enter().append('path').filter(function(f) {
+        svg.append('g')
+          .attr('class', 'lines')
+          .selectAll('.line')
+          .data(aData).enter()
+          .append('path').filter(function(f) {
             return f.filter(function(g) {
                 return g[1] > 0;
             });
-        }).attr('id', function(d, i) {
+          })
+          .attr('id', function(d, i) {
             return 'plotLine-' + aProperties[i].curveId;
-        }).style('stroke', function(d, i) {
-            return color(oColorMapping[aProperties[i].curveId]);
-        }).style('stroke-dasharray', function(d, i) {
-            var x = aProperties[i].biologicalReplicate;
-            return x * 3 + ',' + (x - 1) * 3;
-        }).on('mouseover', function() {
+          })
+          .style('stroke', function(d, i) {
+            return oCurveStyleMapping[aProperties[i].curveId].color;
+          })
+          .style('stroke-dasharray', function(d, i) {
+            return oCurveStyleMapping[aProperties[i].curveId].dash;
+          })
+          .on('mouseover', function() {
             var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
             that.highlightMouseOver(sId, x, y);
-        }).on('mouseout', function() {
+          })
+          .on('mouseout', function() {
             var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
             that.unHighlightMouseOver(sId, x, y);
-        }).attr('d', line);
-        var iPxOffSetErrorBar = 8;
+          })
+          .attr('d', line);
 
         var errorGroup = svg.selectAll('g.error').attr('class', 'errorGroup').data(aParameters.map(function(x, i) {
             return {
@@ -217,152 +253,240 @@ export default {
         }));
 
         // add elements
-        var g = errorGroup.enter().append('g').filter(function(d) {
+        var g = errorGroup.enter()
+          .append('g')
+          .filter(function(d) {
             return x(d.data.value) < width && x(d.data.value) > 0 && y(d.formula(d.data.value)) > 0 && y(d.formula(d.data.value)) < height;
-        }).attr('class', 'errorBox').attr('id', function(d) {
+          })
+          .attr('class', 'errorBox').attr('id', function(d) {
             return 'errorLine-' + d.curveId;
-        }).style('stroke', function(d) {
-            return color(oColorMapping[d.curveId]);
-        });
-
-        g.append('line').attr('class', 'errorLine');
-        g.append('line').attr('class', 'end_left').attr('x1', -1000).attr('x2', -1000).attr('y1', -1000).attr('y2', -1000);
-        g.append('line').attr('class', 'end_right').attr('x1', -1000).attr('x2', -1000).attr('y1', -1000).attr('y2', -1000); // just accept it!
-        g.append('rect').attr('class', 'marker');
+          })
+          .style('stroke', function(d) {
+            return oCurveStyleMapping[d.curveId].color;
+          });
         
         // errorLine
+        g.append('line')
+          .attr('class', 'errorLine');
+          
         svg.selectAll('.errorLine').attr('x1', function getX1(d) {
             var dPosition = x(d.data.value + d.data.std_error) - x(d.data.value);
             return x(d.data.value) - dPosition < 0 ? 0 : x(d.data.value) - dPosition;
-        }).attr('y1', function getY1(d) {
+          })
+          .attr('y1', function getY1(d) {
             var fCurve = d.formula;
             return y(fCurve(d.data.value));
-        }).attr('x2', function getX2(d) {
+          })
+          .attr('x2', function getX2(d) {
             return x(d.data.value + d.data.std_error) > width ? width : x(d.data.value + d.data.std_error);
-        }).attr('y2', function getY2(d) {
+          })
+          .attr('y2', function getY2(d) {
             var fCurve = d.formula;
             return y(fCurve(d.data.value));
-        });
-        
+          });
         
         // rightLine
-        svg.selectAll('.end_right').filter(function(d) {
+        g.append('line')
+          .attr('class', 'end_right')
+          .attr('x1', -1000)
+          .attr('x2', -1000)
+          .attr('y1', -1000)
+          .attr('y2', -1000); // just accept it!
+        
+        var iPxOffSetErrorBar = 8;
+        svg.selectAll('.end_right')
+          .filter(function(d) {
             return x(d.data.value + d.data.std_error) < width;
-        }).attr('x1', function getX1(d) {
+          })
+          .attr('x1', function getX1(d) {
             return x(d.data.value + d.data.std_error);
-        }).attr('y1', function getY1(d) {
+          })
+          .attr('y1', function getY1(d) {
             // upper
             var fCurve = d.formula;
             return y(fCurve(d.data.value)) - iPxOffSetErrorBar;
-        }).attr('x2', function getX2(d) {
+          })
+          .attr('x2', function getX2(d) {
             return x(d.data.value + d.data.std_error);
-        }).attr('y2', function getY2(d) {
+          })
+          .attr('y2', function getY2(d) {
             var fCurve = d.formula;
             return y(fCurve(d.data.value)) + iPxOffSetErrorBar;
-        });
+          });
 
         // leftLine
-        svg.selectAll('.end_left').filter(function(d) {
+        g.append('line')
+          .attr('class', 'end_left')
+          .attr('x1', -1000)
+          .attr('x2', -1000)
+          .attr('y1', -1000)
+          .attr('y2', -1000);
+        
+        svg.selectAll('.end_left')
+          .filter(function(d) {
             var dPosition = x(d.data.value + d.data.std_error) - x(d.data.value);
             return x(d.data.value) - dPosition > 0;
-        }).attr('x1', function getX1(d) {
+          })
+          .attr('x1', function getX1(d) {
             var dPosition = x(d.data.value + d.data.std_error) - x(d.data.value);
             return x(d.data.value) - dPosition;
-        }).attr('y1', function getY1(d) {
+          })
+          .attr('y1', function getY1(d) {
             var fCurve = d.formula;
             return y(fCurve(d.data.value)) - iPxOffSetErrorBar;
-        }).attr('x2', function getX2(d) {
+          })
+          .attr('x2', function getX2(d) {
             var dPosition = x(d.data.value + d.data.std_error) - x(d.data.value);
             return x(d.data.value) - dPosition;
-        }).attr('y2', function getY2(d) {
+          })
+          .attr('y2', function getY2(d) {
             var fCurve = d.formula;
             return y(fCurve(d.data.value)) + iPxOffSetErrorBar;
-        });
+          });
 
         // marker
-        svg.selectAll('.marker').attr('x', function getX(d) {
+        g.append('rect')
+          .attr('class', 'marker');
+        
+        svg.selectAll('.marker')
+          .attr('x', function getX(d) {
             return x(d.data.value) - 2.5;
-        }).attr('y', function getY(d) {
+          })
+          .attr('y', function getY(d) {
             var fCurve = d.formula;
             return y(fCurve(d.data.value)) - 2.5;
-        }).attr('width', '5').attr('height', '5').attr('fill', function(d) {
-            return color(oColorMapping[d.curveId]);
-        });
+          })
+          .attr('width', '5')
+          .attr('height', '5')
+          .attr('fill', function(d) {
+            return oCurveStyleMapping[d.curveId].color;
+          });
 
         // title
-        svg.append('text').attr('class', 'Title').attr('x', margin.left).attr('y', -20).attr('text-anchor', 'start').text(this.title);
+        svg.append('text')
+          .attr('class', 'Title')
+          .attr('x', margin.left)
+          .attr('y', -20)
+          .attr('text-anchor', 'start')
+          .text(this.title);
 
         // Symbols - color for different treatments, symbol type for different biological replicates
         for (var i = 0; i < aPoints.length; i++) {
-            if (aPoints[i].length > 0) {
-                svg.append('g').attr('class', 'dots').selectAll('.dot').data(aPoints[i]).enter().append('path').attr('class', 'point').attr('id', function() {
-                    return 'dots-' + aProperties[i].curveId;
-                }).attr('ModelId', function() {
-                    return aProperties[i].curveId;
-                }).attr('d', d3.symbol().type(d3.symbols[aProperties[i].curveId % 6])).attr('transform', function(d) {
-                    return 'translate(' + x(d.x) + ',' + y(d.y) + ') scale(0.75)';
-                }).on('mouseover', function() {
-                    var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
-                    that.highlightMouseOver(sId, x, y);
-                }).on('mouseout', function() {
-                    var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
-                    that.unHighlightMouseOver(sId, x, y);
-                }).style('fill', function() {
-                    return color(oColorMapping[aProperties[i].curveId]);
+          if (aPoints[i].length > 0) {
+            svg.append('g')
+              .attr('class', 'dots')
+              .selectAll('.dot')
+              .data(aPoints[i]).enter()
+                .append('path')
+                .attr('class', 'point')
+                .attr('id', function() {
+                  return 'dots-' + aProperties[i].curveId;
+                })
+                .attr('ModelId', function() {
+                  return aProperties[i].curveId;
+                })
+                .attr('d', function() {
+                  return oCurveStyleMapping[aProperties[i].curveId].marker;
+                })
+                .attr('transform', function(d) {
+                  return 'translate(' + x(d.x) + ',' + y(d.y) + ') scale(0.75)';
+                })
+                .on('mouseover', function() {
+                  var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
+                  that.highlightMouseOver(sId, x, y);
+                })
+                .on('mouseout', function() {
+                  var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
+                  that.unHighlightMouseOver(sId, x, y);
+                })
+                .style('fill', function() {
+                  return oCurveStyleMapping[aProperties[i].curveId].color;
                 });
-            }
+          }
         }
 
-        svg.append('text').attr('class', 'x_label').attr('text-anchor', 'middle').attr('x', width / 2).attr('y', height + 30).text('Treatment [' + aProperties[0].doseUnit + ']');
+        svg.append('text')
+          .attr('class', 'x_label')
+          .attr('text-anchor', 'middle')
+          .attr('x', width / 2)
+          .attr('y', height + 30)
+          .text('Treatment [' + aProperties[0].doseUnit + ']');
 
-        svg.append('text').attr('class', 'y_label').attr('transform', 'rotate(-90)').attr('y', -40).attr('x', 0 - height / 2).text(aProperties[0].responseUnit);
+        svg.append('text')
+          .attr('class', 'y_label')
+          .attr('transform', 'rotate(-90)')
+          .attr('y', -40)
+          .attr('x', 0 - height / 2)
+          .text(aProperties[0].responseUnit);
 
         // Legend
         var LegendLineWidth = 25;
         var LegendRowHeight = 10;
         var LegendOffset = 5;
 
-        var legend = svg.selectAll('.legend').data(aProperties).enter().append('g').attr('id', function(d, i) {
+        var legend = svg.selectAll('.legend')
+          .data(aProperties).enter()
+          .append('g')
+          .attr('id', function(d, i) {
             return 'CETSALegend-' + i;
-        }).attr('class', 'legend').attr('ModelId', function(d) {
+          })
+          .attr('class', 'legend').attr('ModelId', function(d) {
             return d.curveId;
-        }).attr('transform', function(d, i) {
+          })
+          .attr('transform', function(d, i) {
             var combined = LegendRowHeight + LegendOffset;
             var x = width + LegendOffset * 2;
             var y = combined * i + (height - aProperties.length * combined) / 2;
             return 'translate(' + x + ',' + y + ')';
-        });
+          });
 
-        legend.append('path').attr('class', 'point').attr('id', function(d, i) {
-            return 'dotsLegend-' + aProperties[i].curveId;
-        })
-        .attr('d', function(d, i) {
-            return d3.symbol().type(d3.symbols[aProperties[i].curveId % 6])();
-        })
-        .attr('transform', 'translate(' + LegendLineWidth / 2 + ',' + LegendRowHeight / 2 + ') scale(0.75)').style('fill', function(d) {
-            return color(oColorMapping[d.curveId]);
-        });
+        legend.append('path')
+          .attr('class', 'point')
+          .attr('id', function(d) {
+            return 'dotsLegend-' + d.curveId;
+          })
+          .attr('d', function(d) {
+              return oCurveStyleMapping[d.curveId].marker;
+          })
+          .attr('transform', 'translate(' + LegendLineWidth / 2 + ',' + LegendRowHeight / 2 + ') scale(0.75)')
+          .style('fill', function(d) {
+              return oCurveStyleMapping[d.curveId].color;
+          });
 
-        legend.append('line').attr('x1', 0).attr('id', function(d) {
+        legend.append('line')
+          .attr('x1', 0)
+          .attr('id', function(d) {
             return 'legendLine-' + d.curveId;
-        }).attr('x2', LegendLineWidth).attr('y1', LegendRowHeight / 2).attr('y2', LegendRowHeight / 2).style('stroke', function(d) {
-            return color(oColorMapping[d.curveId]);
-        }).style('stroke-dasharray', function(d) {
-            var x = d.biologicalReplicate - 1;
-            return Math.max(1, x * 3) + ',' + x * 3;
-        });
+          })
+          .attr('x2', LegendLineWidth)
+          .attr('y1', LegendRowHeight / 2)
+          .attr('y2', LegendRowHeight / 2)
+          .style('stroke', function(d) {
+              return oCurveStyleMapping[d.curveId].color;
+          })
+          .style('stroke-dasharray', function(d) {
+              return oCurveStyleMapping[d.curveId].dash;
+          });
 
-        legend.append('text').attr('x', LegendLineWidth + LegendOffset).attr('y', LegendRowHeight - 1).attr('class', 'legendText').on('mouseover', function() {
+        legend.append('text')
+          .attr('x', LegendLineWidth + LegendOffset)
+          .attr('y', LegendRowHeight - 1)
+          .attr('class', 'legendText')
+          .on('mouseover', function() {
             var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
             that.highlightMouseOver(sId, x, y);
-        }).on('mouseout', function() {
+          })
+          .on('mouseout', function() {
             var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
             that.unHighlightMouseOver(sId, x, y);
-        }).attr('id', function(d, i) {
+          })
+          .attr('id', function(d, i) {
             return 'legendText-' + aProperties[i].curveId;
-        }).text(function(d) {
+          })
+          .text(function(d) {
             return d.TREATMENT;
-        });
+          });
+        
         /* TODO: convert this to Vue.js
         for (i = 0; i < aProperties.length; i++) {
             $('#CETSALegend-' + i).tipsy({
@@ -441,8 +565,8 @@ export default {
    },
   
   mounted: function() {
-        this.init();
-    }
+    this.init();
+  }
 }
 </script>
 
