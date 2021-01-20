@@ -1,0 +1,38 @@
+.sapProteomicsdbInteractions > svg {
+	border: 1px solid;
+	font: 13px sans-serif;
+	text-anchor: end;
+}
+
+#d3_selectable_force_directed_graph .node {
+	stroke: #fff;
+	stroke-width: 1.5px;
+}
+
+.node .selected {
+	fill: orange;
+}
+
+.link {
+}
+
+.node text {
+  fill: white;
+  stroke: none;
+  font-size: .9;
+  text-anchor: middle;
+  text-align: middle;
+	vertical-align: middle;
+}
+
+.progress-meter .background {
+  fill: #ccc;
+}
+.progress-meter .foreground {
+  fill: #000;
+}
+.progress-meter text {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-size: 24px;
+  font-weight: bold;
+}
