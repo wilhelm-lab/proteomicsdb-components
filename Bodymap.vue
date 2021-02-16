@@ -1,5 +1,21 @@
 <template>
   <v-row class="bodymapDiv" id="bodymapDiv">
+    <v-btn-toggle v-if="selectedOrganism.taxcode === 9606"
+                  v-model="selectedGender"
+                  tile
+                  :color="buttonsColor"
+                  group
+                  fixed top left
+                  mandatory
+                  style="margin-left: 20px; margin-right: -40px;"
+                  >
+                  <v-btn icon value="female">
+                    <v-icon>fas fa-venus</v-icon>
+                  </v-btn>
+                  <v-btn icon value="male">
+                    <v-icon>fas fa-mars</v-icon>
+                  </v-btn>
+    </v-btn-toggle>
     <div id="bodymap"
          class="bodymap"
          >
@@ -39,6 +55,10 @@ export default {
       type: Number,
       default: 500
     },
+    buttonsColor: {
+      type: String,
+      default: '#0065BD'
+    },
     minHeight: {
       type: Number,
       default: 500
@@ -46,10 +66,6 @@ export default {
     data: {
       type: Array,
       default: () => []
-    },
-    selectedGender: {
-      type: String,
-      default: 'female'
     },
     selectedOrganism: {
       type: Object,
@@ -61,7 +77,8 @@ export default {
       bodyMapSvg: '',
       svg: null,
       promiseLoadSvg: null,
-      tip: d3.tip().attr('class', 'd3-tip').offset([0, 0]).html(() => {return("bla bla")})
+      tip: d3.tip().attr('class', 'd3-tip').offset([0, 0]).html(() => {return("bla bla")}),
+      selectedGender: null
     }
   },
   watch: {
@@ -69,6 +86,9 @@ export default {
       if (newData) {
         this.redraw();
       }
+    },
+    selectedOrganism: function (oOrg) {
+      this.selectedGender = oOrg.taxcode === 9606 ? 'female' : null;
     },
     selectedGender: function () {
       if (this.data) {
@@ -322,22 +342,22 @@ export default {
 
                 that.tip.show(t, svgOrgan.node());
               });*/
-              // .tipsy({
-                //   gravity: 's',
-                //   html: true
-              // })
-              // .attr('original-title', organ_name.replace('_', ' ') + '<hr>' + label + ': ' + max_intensity.toFixed(2));
+// .tipsy({
+  //   gravity: 's',
+  //   html: true
+// })
+// .attr('original-title', organ_name.replace('_', ' ') + '<hr>' + label + ': ' + max_intensity.toFixed(2));
 
-              // while (svgOrgan.children().length > 0) {
-                //   svgOrgan.attr('fill', organ_color)
-                //   .attr('stroke', '#787878')
-                //   .tipsy({
-                  //     gravity: 's',
-                  //     html: true
-                //   })
-                //   .attr('original-title', organ_name.replace('_', ' ') + '<hr>' + label + ': ' + max_intensity.toFixed(2));
-                //   svgOrgan = svgOrgan.children();
-              // }
+// while (svgOrgan.children().length > 0) {
+  //   svgOrgan.attr('fill', organ_color)
+  //   .attr('stroke', '#787878')
+  //   .tipsy({
+    //     gravity: 's',
+    //     html: true
+  //   })
+  //   .attr('original-title', organ_name.replace('_', ' ') + '<hr>' + label + ': ' + max_intensity.toFixed(2));
+  //   svgOrgan = svgOrgan.children();
+// }
             }
           }
         });
@@ -450,6 +470,9 @@ export default {
     },
     redraw: function(){
       d3.select(this.$el).selectAll('svg').remove();
+      if (this.selectedGender === null && this.selectedOrganism && this.selectedOrganism.taxcode === 9606) {
+        this.selectedGender = 'female';
+      }
       this.drawBodymap();
       this.drawBodymapLegend();
     },
@@ -503,6 +526,9 @@ export default {
 .d3-tip s
 {
   z-index: 2000;
+}
+.v-btn-toggle {
+  flex-direction: column;
 }
 </style>
 
