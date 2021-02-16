@@ -486,7 +486,7 @@ export default {
 }
 </script>
 
-<style scss>
+<style scss scoped>
 
 /* probably won't work tooltip */
 .d3-tip {
