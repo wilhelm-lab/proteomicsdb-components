@@ -78,7 +78,7 @@ export default {
       svg: null,
       promiseLoadSvg: null,
       tip: d3.tip().attr('class', 'd3-tip').offset([0, 0]).html(() => {return("bla bla")}),
-      selectedGender: null
+      selectedGender: 'female'
     }
   },
   watch: {
@@ -107,14 +107,12 @@ export default {
         if(that.selectedGender === 'male') {
           d3.xml('/assets/bodyMap/man_new_with_IDs_final.svg').then((response) => { 
             d3.select(".bodymap").node().append(response.documentElement);
-            d3.select(".bodymap").select("svg").append('circle').attr('id', 'tipfollowscursor');
             that.svgLoaded = true;
             if (that.data) { that.bind(); }
           });
         } else if (that.selectedGender === 'female') {
           d3.xml('/assets/bodyMap/woman_new_with_IDs_final.svg').then((response) => { 
             d3.select(".bodymap").node().append(response.documentElement);
-            d3.select(".bodymap").select("svg").append('circle').attr('id', 'tipfollowscursor');
             that.svgLoaded = true;
             if (that.data) { that.bind(); }
           });
@@ -126,7 +124,7 @@ export default {
         });
         that.svgLoaded = true;
         if (that.data) {
-          //that.bind();
+          that.bind();
         }
         break;
         case 10090:
@@ -135,7 +133,7 @@ export default {
         });
         that.svgLoaded = true;
         if (that.data) {
-          //that.bind();
+          that.bind();
         }
         break; 
       }
@@ -264,7 +262,7 @@ export default {
 
     reset: function() {
       var that = this;
-      var svg = d3.select(this.$el).selectAll('svg');
+      var svg = d3.select('.bodymap').selectAll('svg');
       if (typeof this.selectedOrganism !== 'undefined') {
         Object.entries(that.getOrgans()).forEach(function(organ) {
           var organ_name = organ[1];
@@ -469,19 +467,13 @@ export default {
       .attr('height', height);
     },
     redraw: function(){
-      d3.select(this.$el).selectAll('svg').remove();
-      if (this.selectedGender === null && this.selectedOrganism && this.selectedOrganism.taxcode === 9606) {
-        this.selectedGender = 'female';
-      }
+      console.log('redraw')
+      d3.select('.bodymapDiv').selectAll('svg').remove();
       this.drawBodymap();
       this.drawBodymapLegend();
     },
   },
   mounted: function () {
-    if (this.data !== undefined ) {
-
-      this.redraw();
-    }
   }
 }
 </script>
