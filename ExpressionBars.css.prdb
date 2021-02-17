@@ -1,0 +1,7 @@
+.sapProteomicsdbExpressionBars {
+    overflow: hidden;
+}
+
+.ExpressionBars .clickEvent{
+    cursor: pointer;
+}

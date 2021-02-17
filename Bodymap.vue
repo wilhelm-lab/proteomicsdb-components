@@ -467,11 +467,13 @@ export default {
       .attr('height', height);
     },
     redraw: function(){
-      console.log('redraw')
       d3.select('.bodymapDiv').selectAll('svg').remove();
       this.drawBodymap();
       this.drawBodymapLegend();
     },
+    getSVG: function () {
+      return d3.select(this.$el).selectAll('svg').node();
+    }
   },
   mounted: function () {
   }

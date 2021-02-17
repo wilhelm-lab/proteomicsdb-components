@@ -451,6 +451,13 @@ export default {
        // this.toggleBarSampleId(element);
       }
     },
+    getSVG: function () {
+      var aPlots = [];
+      aPlots.push(d3.select(this.$el).select('.expressionBarsAxisTop').selectAll('svg').node());
+      aPlots.push(d3.select(this.$el).select('.expressionBarsChart').selectAll('svg').node());
+      aPlots.push(d3.select(this.$el).select('.expressionBarsAxisBottom').selectAll('svg').node());
+      return aPlots;
+    }
 
   },
   mounted: function () {

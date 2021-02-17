@@ -1,0 +1,4 @@
+.sapProteomicsdbBodymapLegend,
+.sapProteomicsdbBodymap {
+  float: left;
+}
