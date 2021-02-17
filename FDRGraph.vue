@@ -1,5 +1,5 @@
 <template>
-  <div id="fdrplot"
+  <div
        class="fdrClass"
        ></div>
 </template>
@@ -459,10 +459,7 @@ export default {
     },
 
     getSVG: function getSVG() {
-      return {
-        svg: this._svg,
-        cssFiles: ['js/viz/FDRGraph.css']
-      };
+      return d3.select(this.$el).select('svg').node();
     }
   },
   mounted: function () {
