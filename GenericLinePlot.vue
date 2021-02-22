@@ -35,9 +35,21 @@ export default {
       type: Boolean,
       default: false
     },
+    turnover: {
+      type: Boolean,
+      default: false
+    },
+    ratioY: {
+      type: Boolean,
+      default: false
+    },
     hideLegend: {
       type: Boolean,
       default: false
+    },
+    hideErrorBars: {
+      type: Boolean,
+      defalut: false
     },
     xAxisLabel: {
       type: String,
@@ -46,6 +58,10 @@ export default {
     yAxisLabel: {
       type: String,
       default: null
+    },
+    logX: {
+      type: Boolean,
+      default: true
     }
   },
   watch: {
@@ -56,7 +72,8 @@ export default {
   data: function () {
     return {
       bShowCurve: true,
-      oErrorbarInfo: {}
+      oErrorbarInfo: {},
+      bCETSA: false
     }
   },
 
@@ -64,8 +81,10 @@ export default {
     getCurveFunction: function (oParameters) {
       var formula = oParameters.formula;
       for (var key in oParameters) {
-        while (formula.search(key) > 0) {
-          formula = formula.replace(key, oParameters[key].value);
+        let sKey = key.length < 2 ? ' ' + key + ' ' : key;
+
+        while (formula.search(sKey) > 0) {
+          formula = formula.replace(sKey, oParameters[key].value);
         }
       }
 
@@ -84,25 +103,31 @@ export default {
         var max = d3.max(aDataPoints, function(d) {
           return d[0];
         });
-
-        var minLog = Math.log10(min);
-        var maxLog = Math.log10(max);
-        var step = 0.05;
-        aValues.push(minLog);
-        //        Math.floor((maxLog - minLog) / step);
-        for (var j = minLog + step; j <= maxLog; j = j + step) {
-          aValues.push(j);
+        if (this.logX) {
+          min = Math.log10(min);
+          max = Math.log10(max);
+          var step = 0.05;
+          aValues.push(min);
+          for (var j = min + step; j <= max; j = j + step) {
+            aValues.push(j);
+          }
+          aValues.push(max);
+        } else {
+          for (var k = min; k <= max; k++) {
+            aValues.push(k);
+          }
         }
-        aValues.push(maxLog);
-
       } else {
         for (var i = -1; i <= 5; i = i + 0.01) {
           aValues.push(i);
         }
       }
-      aValues = aValues.map(function(d) {
-        return Math.pow(10, d);
-      });
+
+      if (this.logX) {
+        aValues = aValues.map(function(d) {
+          return Math.pow(10, d);
+        });
+      }
 
       var aData = aValues.map(function(d) {
         return [d, fCurve(d)];
@@ -123,8 +148,8 @@ export default {
 
         var x = aProperties[i].biologicalReplicate;
         var dash = x * 3 + ',' + (x - 1) * 3;
-
-        oDictionary[aProperties[i].curveId] = { 
+        let cid = aProperties[i].curveId || i;
+        oDictionary[cid] = { 
           color : color(treatmentDictionary[aProperties[i].TREATMENT][0]), 
           dash : dash, 
           marker : d3.symbol().type(d3.symbols[treatmentDictionary[aProperties[i].TREATMENT][1] % 6])()
@@ -179,7 +204,7 @@ export default {
       var that = this;
 
       var oCurveStyleMapping = this.createCurveStyleDictionary(aProperties);
-      this.$emit('update-curve-styles', oCurveStyleMapping)
+      this.$emit('update-curve-styles', oCurveStyleMapping);
 
       var margin = {
         top: 40,
@@ -196,11 +221,21 @@ export default {
           return e[0];
         });
       }) ; 
-      var x = d3.scaleLog().domain([ minDomain , d3.max(aData, function(d) {
+
+      var x = this.logX ? 
+      d3.scaleLog().domain([ minDomain , d3.max(aData, function(d) {
         return d3.max(d, function(e) {
           return e[0];
         });
-      })]).range([0, width]).nice();
+      })]).range([0, width]).nice() :
+      d3.scaleLinear()
+      .domain([minDomain, d3.max(aData, function(d) {
+        return d3.max(d, function(e) {
+          return e[0];
+        });
+      })])
+      .range([0, width])
+      .nice();
 
       var yMaxPoints = 0;
 
@@ -215,11 +250,19 @@ export default {
           return e[1];
         });
       });
-      var y = d3.scaleLinear().domain([0, yMaxPoints > yMaxCurve ? yMaxPoints : yMaxCurve]).range([height, 0]).nice();
+      var y = d3.scaleLinear()
+      .domain([0, yMaxPoints > yMaxCurve ? yMaxPoints : yMaxCurve])
+      .range([height, 0]).nice();
 
-      var xAxis = d3.axisBottom(x).ticks( this.kinobeads ? 10 : 8, function ticks(digit) {
-        return digit;
-      });
+      var xAxis;
+      
+      if(!this.logX) {
+        xAxis = d3.axisBottom(x);
+      } else {
+        xAxis = d3.axisBottom(x).ticks( this.kinobeads ? 10 : 8, function ticks(digit) {
+          return digit;
+        });
+      }
 
       var yAxis = d3.axisLeft(y);
 
@@ -260,13 +303,17 @@ export default {
           });
         })
         .attr('id', function(d, i) {
-          return 'plotLine-' + aProperties[i].curveId;
+          let iterator = aProperties.length === 1 ? 0 : i ;
+          let postfix = aProperties[iterator].curveId || i;
+          return 'plotLine-' + postfix;
         })
         .style('stroke', function(d, i) {
-          return oCurveStyleMapping[aProperties[i].curveId].color;
+          let iterator = aProperties.length === 1 ? 0 : i ;
+          return oCurveStyleMapping[aProperties[iterator].curveId || i].color;
         })
         .style('stroke-dasharray', function(d, i) {
-          return oCurveStyleMapping[aProperties[i].curveId].dash;
+          let iterator = aProperties.length === 1 ? 0 : i ;
+          return oCurveStyleMapping[aProperties[iterator].curveId || i].dash;
         })
         .on('mouseover', function() {
           var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
@@ -278,154 +325,157 @@ export default {
         })
         .attr('d', line);
 
-        var errorGroup = svg.selectAll('g.error').attr('class', 'errorGroup').data(aParameters.map(function(x, i) {
-          let o = {
-            data: x['ED50, inflection'],
-            formula: that.getCurveFunction(aParameters[i]),
-            curveId: aProperties[i].curveId
-          };
+        if (!this.hideErrorBars) {
+          var errorGroup = svg.selectAll('g.error').attr('class', 'errorGroup').data(aParameters.map(function(x, i) {
+            let iterator = aProperties.length === 1 ? 0 : i ;
+            let o = {
+              data: x['ED50, inflection'] || x['inflection'],
+              formula: that.getCurveFunction(aParameters[i]),
+              curveId: aProperties[iterator].curveId || i
+            };
 
-          if(that.kinobeads) {
-            o.errorInfo= that.oErrorbarInfo
-          }
-          return o;
-        }));
+            if(that.kinobeads) {
+              o.errorInfo= that.oErrorbarInfo
+            }
+            return o;
+          }));
 
-        // add elements
-        var g1 = errorGroup.enter()
-        .append('g')
-        .filter(function(d) {
-          return x(d.data.value) < width && x(d.data.value) > 0 && y(d.formula(d.data.value)) > 0 && y(d.formula(d.data.value)) < height;
-        })
-        .attr('class', 'errorBox');
-
-        if (this.kinobeads) {
-          g1.append('text')
-          .text(function text(d) {
-            return 'EC50: ' + d.errorInfo.value.toFixed(0) + ' nM';
+          // add elements
+          var g1 = errorGroup.enter()
+          .append('g')
+          .filter(function(d) {
+            return x(d.data.value) < width && x(d.data.value) > 0 && y(d.formula(d.data.value)) > 0 && y(d.formula(d.data.value)) < height;
           })
-          .attr('text-anchor', function textAnchor(d) {
-            var nTextWidth = this.getBBox().width;
-            var nXPosition = x(d3.max([0.1, d.errorInfo.value + d.std_error]));
-            return nXPosition + nTextWidth > width ? 'end' : 'begin';
+          .attr('class', 'errorBox');
+
+          if (this.kinobeads) {
+            g1.append('text')
+            .text(function text(d) {
+              return 'EC50: ' + d.errorInfo.value.toFixed(0) + ' nM';
+            })
+            .attr('text-anchor', function textAnchor(d) {
+              var nTextWidth = this.getBBox().width;
+              var nXPosition = x(d3.max([0.1, d.errorInfo.value + d.std_error]));
+              return nXPosition + nTextWidth > width ? 'end' : 'begin';
+            })
+            .attr('y', function getY(d) {
+              return Math.max(y(d.errorInfo.y + 0.1), 0);
+            })
+            .attr('x', function getX(d) {
+              return Math.min(x(d3.max([0.1, d.errorInfo.value + d.errorInfo.std_error])), width);
+            });
+          }
+
+          var g = errorGroup.enter()
+          .append('g')
+          .filter(function(d) {
+            return x(d.data.value) < width && x(d.data.value) > 0 && y(d.formula(d.data.value)) > 0 && y(d.formula(d.data.value)) < height;
+          })
+          .attr('class', 'errorLine')
+          g.attr('id', function(d) {
+            return 'errorLine-' + d.curveId;
+          })
+          .style('stroke', function(d) {
+            return that.kinobeads ? 'orange' : oCurveStyleMapping[d.curveId].color;
+          });
+
+          // errorLine
+          g.append('line')
+          .attr('class', 'errorLine');
+
+          svg.selectAll('.errorLine').attr('x1', function getX1(d) {
+            var dPosition = x(d.data.value + d.data.std_error) - x(d.data.value);
+            return x(d.data.value) - dPosition < 0 ? 0 : x(d.data.value) - dPosition;
+          })
+          .attr('y1', function getY1(d) {
+            var fCurve = d.formula;
+            return y(fCurve(d.data.value));
+          })
+          .attr('x2', function getX2(d) {
+            return x(d.data.value + d.data.std_error) > width ? width : x(d.data.value + d.data.std_error);
+          })
+          .attr('y2', function getY2(d) {
+            var fCurve = d.formula;
+            return y(fCurve(d.data.value));
+          });
+
+          // rightLine
+          g.append('line')
+          .attr('class', 'end_right')
+          .attr('x1', -1000)
+          .attr('x2', -1000)
+          .attr('y1', -1000)
+          .attr('y2', -1000); // just accept it!
+
+          var iPxOffSetErrorBar = 8;
+          svg.selectAll('.end_right')
+          .filter(function(d) {
+            return x(d.data.value + d.data.std_error) < width;
+          })
+          .attr('x1', function getX1(d) {
+            return x(d.data.value + d.data.std_error);
+          })
+          .attr('y1', function getY1(d) {
+            // upper
+            var fCurve = d.formula;
+            return y(fCurve(d.data.value)) - iPxOffSetErrorBar;
+          })
+          .attr('x2', function getX2(d) {
+            return x(d.data.value + d.data.std_error);
+          })
+          .attr('y2', function getY2(d) {
+            var fCurve = d.formula;
+            return y(fCurve(d.data.value)) + iPxOffSetErrorBar;
+          });
+
+          // leftLine
+          g.append('line')
+          .attr('class', 'end_left')
+          .attr('x1', -1000)
+          .attr('x2', -1000)
+          .attr('y1', -1000)
+          .attr('y2', -1000);
+
+          svg.selectAll('.end_left')
+          .filter(function(d) {
+            var dPosition = x(d.data.value + d.data.std_error) - x(d.data.value);
+            return x(d.data.value) - dPosition > 0;
+          })
+          .attr('x1', function getX1(d) {
+            var dPosition = x(d.data.value + d.data.std_error) - x(d.data.value);
+            return x(d.data.value) - dPosition;
+          })
+          .attr('y1', function getY1(d) {
+            var fCurve = d.formula;
+            return y(fCurve(d.data.value)) - iPxOffSetErrorBar;
+          })
+          .attr('x2', function getX2(d) {
+            var dPosition = x(d.data.value + d.data.std_error) - x(d.data.value);
+            return x(d.data.value) - dPosition;
+          })
+          .attr('y2', function getY2(d) {
+            var fCurve = d.formula;
+            return y(fCurve(d.data.value)) + iPxOffSetErrorBar;
+          });
+
+          // marker
+          g.append('rect')
+          .attr('class', 'marker');
+
+          svg.selectAll('.marker')
+          .attr('x', function getX(d) {
+            return x(d.data.value) - 2.5;
           })
           .attr('y', function getY(d) {
-            return Math.max(y(d.errorInfo.y + 0.1), 0);
+            var fCurve = d.formula;
+            return y(fCurve(d.data.value)) - 2.5;
           })
-          .attr('x', function getX(d) {
-            return Math.min(x(d3.max([0.1, d.errorInfo.value + d.errorInfo.std_error])), width);
+          .attr('width', '5')
+          .attr('height', '5')
+          .attr('fill', function(d) {
+            return that.kinobeads ? 'orange' : oCurveStyleMapping[d.curveId].color;
           });
         }
-        
-        var g = errorGroup.enter()
-        .append('g')
-        .filter(function(d) {
-          return x(d.data.value) < width && x(d.data.value) > 0 && y(d.formula(d.data.value)) > 0 && y(d.formula(d.data.value)) < height;
-        })
-        .attr('class', 'errorLine')
-        g.attr('id', function(d) {
-          return 'errorLine-' + d.curveId;
-        })
-        .style('stroke', function(d) {
-          return that.kinobeads ? 'orange' : oCurveStyleMapping[d.curveId].color;
-        });
-
-        // errorLine
-        g.append('line')
-        .attr('class', 'errorLine');
-
-        svg.selectAll('.errorLine').attr('x1', function getX1(d) {
-          var dPosition = x(d.data.value + d.data.std_error) - x(d.data.value);
-          return x(d.data.value) - dPosition < 0 ? 0 : x(d.data.value) - dPosition;
-        })
-        .attr('y1', function getY1(d) {
-          var fCurve = d.formula;
-          return y(fCurve(d.data.value));
-        })
-        .attr('x2', function getX2(d) {
-          return x(d.data.value + d.data.std_error) > width ? width : x(d.data.value + d.data.std_error);
-        })
-        .attr('y2', function getY2(d) {
-          var fCurve = d.formula;
-          return y(fCurve(d.data.value));
-        });
-
-        // rightLine
-        g.append('line')
-        .attr('class', 'end_right')
-        .attr('x1', -1000)
-        .attr('x2', -1000)
-        .attr('y1', -1000)
-        .attr('y2', -1000); // just accept it!
-
-        var iPxOffSetErrorBar = 8;
-        svg.selectAll('.end_right')
-        .filter(function(d) {
-          return x(d.data.value + d.data.std_error) < width;
-        })
-        .attr('x1', function getX1(d) {
-          return x(d.data.value + d.data.std_error);
-        })
-        .attr('y1', function getY1(d) {
-          // upper
-          var fCurve = d.formula;
-          return y(fCurve(d.data.value)) - iPxOffSetErrorBar;
-        })
-        .attr('x2', function getX2(d) {
-          return x(d.data.value + d.data.std_error);
-        })
-        .attr('y2', function getY2(d) {
-          var fCurve = d.formula;
-          return y(fCurve(d.data.value)) + iPxOffSetErrorBar;
-        });
-
-        // leftLine
-        g.append('line')
-        .attr('class', 'end_left')
-        .attr('x1', -1000)
-        .attr('x2', -1000)
-        .attr('y1', -1000)
-        .attr('y2', -1000);
-
-        svg.selectAll('.end_left')
-        .filter(function(d) {
-          var dPosition = x(d.data.value + d.data.std_error) - x(d.data.value);
-          return x(d.data.value) - dPosition > 0;
-        })
-        .attr('x1', function getX1(d) {
-          var dPosition = x(d.data.value + d.data.std_error) - x(d.data.value);
-          return x(d.data.value) - dPosition;
-        })
-        .attr('y1', function getY1(d) {
-          var fCurve = d.formula;
-          return y(fCurve(d.data.value)) - iPxOffSetErrorBar;
-        })
-        .attr('x2', function getX2(d) {
-          var dPosition = x(d.data.value + d.data.std_error) - x(d.data.value);
-          return x(d.data.value) - dPosition;
-        })
-        .attr('y2', function getY2(d) {
-          var fCurve = d.formula;
-          return y(fCurve(d.data.value)) + iPxOffSetErrorBar;
-        });
-
-        // marker
-        g.append('rect')
-        .attr('class', 'marker');
-
-        svg.selectAll('.marker')
-        .attr('x', function getX(d) {
-          return x(d.data.value) - 2.5;
-        })
-        .attr('y', function getY(d) {
-          var fCurve = d.formula;
-          return y(fCurve(d.data.value)) - 2.5;
-        })
-        .attr('width', '5')
-        .attr('height', '5')
-        .attr('fill', function(d) {
-          return that.kinobeads ? 'orange' : oCurveStyleMapping[d.curveId].color;
-        });
 
       }
       // title
@@ -446,13 +496,17 @@ export default {
           .append('path')
           .attr('class', 'point')
           .attr('id', function() {
-            return 'dots-' + aProperties[i].curveId;
+            let iterator = aProperties.length === 1 ? 0 : i ;
+            let postfix = aProperties[iterator].curveId || i;
+            return 'dots-' + postfix;
           })
           .attr('ModelId', function() {
-            return aProperties[i].curveId;
+            let iterator = aProperties.length === 1 ? 0 : i ;
+            return aProperties[iterator].curveId;
           })
           .attr('d', function() {
-            return oCurveStyleMapping[aProperties[i].curveId].marker;
+            let iterator = aProperties.length === 1 ? 0 : i ;
+            return oCurveStyleMapping[aProperties[iterator].curveId || i].marker;
           })
           .attr('transform', function(d) {
             return 'translate(' + x(d.x) + ',' + y(d.y) + ') scale(0.75)';
@@ -466,7 +520,8 @@ export default {
             that.unHighlightMouseOver(sId, x, y);
           })
           .style('fill', function() {
-            return oCurveStyleMapping[aProperties[i].curveId].color;
+            let iterator = aProperties.length === 1 ? 0 : i ;
+            return oCurveStyleMapping[aProperties[iterator].curveId || i].color;
           });
         }
       }
@@ -490,15 +545,14 @@ export default {
         var LegendLineWidth = 25;
         var LegendRowHeight = 10;
         var LegendOffset = 5;
-
         var legend = svg.selectAll('.legend')
         .data(aProperties).enter()
         .append('g')
         .attr('id', function(d, i) {
           return 'CETSALegend-' + i;
         })
-        .attr('class', 'legend').attr('ModelId', function(d) {
-          return d.curveId;
+        .attr('class', 'legend').attr('ModelId', function(d, i) {
+          return d.curveId || i;
         })
         .attr('transform', function(d, i) {
           var combined = LegendRowHeight + LegendOffset;
@@ -509,30 +563,36 @@ export default {
 
         legend.append('path')
         .attr('class', 'point')
-        .attr('id', function(d) {
-          return 'dotsLegend-' + d.curveId;
+        .attr('id', function(d, i) {
+          let si = d.curveId || i; 
+          return 'dotsLegend-' + si;
         })
-        .attr('d', function(d) {
-          return oCurveStyleMapping[d.curveId].marker;
+        .attr('d', function(d, i) {
+          let si = d.curveId || i; 
+          return oCurveStyleMapping[si].marker;
         })
         .attr('transform', 'translate(' + LegendLineWidth / 2 + ',' + LegendRowHeight / 2 + ') scale(0.75)')
-        .style('fill', function(d) {
-          return oCurveStyleMapping[d.curveId].color;
+        .style('fill', function(d, i) {
+          let si = d.curveId || i; 
+          return oCurveStyleMapping[si].color;
         });
 
         legend.append('line')
         .attr('x1', 0)
-        .attr('id', function(d) {
-          return 'legendLine-' + d.curveId;
+        .attr('id', function(d, i) {
+          let si = d.curveId || i; 
+          return 'legendLine-' + si;
         })
         .attr('x2', LegendLineWidth)
         .attr('y1', LegendRowHeight / 2)
         .attr('y2', LegendRowHeight / 2)
-        .style('stroke', function(d) {
-          return oCurveStyleMapping[d.curveId].color;
+        .style('stroke', function(d, i) {
+          let si = d.curveId || i; 
+          return oCurveStyleMapping[si].color;
         })
-        .style('stroke-dasharray', function(d) {
-          return oCurveStyleMapping[d.curveId].dash;
+        .style('stroke-dasharray', function(d, i) {
+          let si = d.curveId || i; 
+          return oCurveStyleMapping[si].dash;
         });
 
         legend.append('text')
@@ -548,10 +608,12 @@ export default {
           that.unHighlightMouseOver(sId, x, y);
         })
         .attr('id', function(d, i) {
-          return 'legendText-' + aProperties[i].curveId;
+          let si = aProperties[i].curveId || i;
+          return 'legendText-' + si;
         })
         .text(function(d) {
-          return d.TREATMENT;
+          let sTreatment = d.TREATMENT || 'Replicate';
+          return that.bCETSA ? sTreatment + ' ' + d.biologicalReplicate : sTreatment;
         });
       }
       /* TODO: convert this to Vue.js
@@ -603,8 +665,10 @@ export default {
              return d[0] === 0 ? [minimalXValue, d[1]] : d;
            });
          });
-
-         this.bShowCurve = !(aParameters.filter((p) => p.slope < 0).length > 0 && this.kinobeads);
+          
+         if ( aParameters.filter((p) => p.Slope !== undefined).length > 0 ) {
+           this.bShowCurve = !(aParameters.filter((p) => p.Slope.value < 0).length > 0 && this.kinobeads);
+         }
          // Series Array for multiple Curves
          var aSeries = [];
          // add Curve Datasets for each dataset
@@ -620,7 +684,7 @@ export default {
          if (aDataPoints && aDataPoints.length > 0) {
            for (i = 0; i < aDataPoints.length; i++) {
              if (aDataPoints[i] && aDataPoints[i].length > 0) {
-               if (!this.kinobeads) {
+               if (!this.ratioY) {
                  aPoints.push(aDataPoints[i].map(function(d) {
                    return {
                      x: d[0],
@@ -635,28 +699,44 @@ export default {
          }
          // Draw Plot with fitted Curve and actual Data Points
          if (aProperties.length >= 1) {
-           this.drawPlot(aSeries, aPoints, aProperties, aParameters);
+           if (aProperties[0].singles) {
+             this.bCETSA = true;
+             this.drawPlot(aSeries, aPoints, aProperties[0].singles, aParameters);
+           } else {
+             this.drawPlot(aSeries, aPoints, aProperties, aParameters);
+           }
          }
        }
      },
      calculateRatio: function (aData, iter) {
        var aResult = [];
+       var i = 0;
+       var nCompare;
        aData = aData.sort(function compare(a, b) { // sort Points to have x = 0 in first position
          return a[0] - b[0];
        });
+       // find if upgoing curve
+       if (this.turnover) {
+         var bUp = aData[0][1] < aData[aData.length - 1][1];
+       }
+       var iteration = this.properties.length === 1 ? 0 : iter;
+       var bNormalized = this.properties[iteration].calculationMethod === 4;  // 4 means normalized intensities
+       if (this.turnover){
+         nCompare = bUp ? aData[aData.length - 1][1] : aData[0][1];
+       } else {
+         nCompare = Math.pow(10, aData[0][1]);
+         // change 0 to 0.1, because log 0 becomes -Infinity and we want to see the control point in the plot
+         aResult[0] = {
+           x: 0.1,
+           y: 1
+         };
+         i++;
+       }
 
-       var bNormalized = this.properties[iter].calculationMethod === 4;  // 4 means normalized intensities
-       var nCompare = Math.pow(10, aData[0][1]);
-       // change 0 to 0.1, because log 0 becomes -Infinity and we want to see the control point in the plot
-       aResult[0] = {
-         x: 0.1,
-         y: 1
-       };
-
-       for (var i = 1; i < aData.length; i++) {
+       for ( i ; i < aData.length; i++) {
          aResult[i] = {
            x: aData[i][0],
-           y: bNormalized ? aData[i][1] : Math.pow(10, aData[i][1]) / nCompare
+           y: this.turnover ? aData[i][1] / nCompare : (bNormalized ? aData[i][1] : Math.pow(10, aData[i][1]) / nCompare)
          };
        }
 
