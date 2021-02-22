@@ -70,6 +70,10 @@ export default {
     selectedOrganism: {
       type: Object,
       default: () => {}
+    },
+    drawOnMount: {
+      type: Boolean,
+      default: false
     }
   },
   data: function () {
@@ -104,6 +108,7 @@ export default {
 
       switch (this.selectedOrganism.taxcode) {
         case 9606:
+        console.log('called');
         if(that.selectedGender === 'male') {
           d3.xml('/assets/bodyMap/man_new_with_IDs_final.svg').then((response) => { 
             d3.select(".bodymap").node().append(response.documentElement);
@@ -111,6 +116,7 @@ export default {
             if (that.data) { that.bind(); }
           });
         } else if (that.selectedGender === 'female') {
+          console.log('called');
           d3.xml('/assets/bodyMap/woman_new_with_IDs_final.svg').then((response) => { 
             d3.select(".bodymap").node().append(response.documentElement);
             that.svgLoaded = true;
@@ -476,6 +482,9 @@ export default {
     }
   },
   mounted: function () {
+    if ( this.drawOnMount && this.data) {
+      this.redraw();
+    }
   }
 }
 </script>
