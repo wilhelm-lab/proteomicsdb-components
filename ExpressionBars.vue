@@ -386,6 +386,9 @@ export default {
       .style('stroke-width', '1px');
 
       g.on('click', this.barSelected);
+      g.on('mouseover', function () {
+        d3.select(this).style("cursor", "pointer");
+      });
 
       groups.exit().remove();
 
