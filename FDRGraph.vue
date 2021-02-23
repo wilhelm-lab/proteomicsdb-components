@@ -38,7 +38,7 @@ export default {
     },
     targetName: {
       type: String,
-      default: undefined
+      default: null
     },
     targetPosition: {
       type: Number,
@@ -79,14 +79,16 @@ export default {
   },
   watch: {
     data: function (newData) {
-      this.drawPlot(newData)
+      if (newData.length > 0) {
+        this.drawPlot(newData)
+      }
     },
     enrichment: function () {
-      if(this.enrichment !== null && this.data !== null)
+      if(this.enrichment !== null && this.data !== null && this.data.length > 0)
         this.drawPlot(this.data)
     },
     targetName: function () {
-      if(this.targetName !== null && this.data !== null)
+      if(this.targetName !== null && this.data !== null && this.data.length > 0)
         this.drawPlot(this.data)
     }
   },
@@ -464,7 +466,7 @@ export default {
   },
   mounted: function () {
     var oData = this.data
-    if (oData !== null && this.targetName != null)  {
+    if (oData !== [] && oData !== null && this.targetName != null)  {
       this.drawPlot(oData)
     }
   }
