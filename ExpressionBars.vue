@@ -169,32 +169,12 @@ export default {
       }
       xAxisDomBottom
       .attr('transform', 'translate('+ margin.left + ',' + 5 + ')')
-      //.attr('transform', 'translate(' + margin.left + ',' + (margin.top + oBarAttributes.height * oData.length + 1) + ')')
       .call(xAxisBottom);
 
       xAxisDomBottom
       .selectAll('.tick text')
       .text(function (d) { if (d < 0) return -d; else return d; })
 
-
-      //content.append('g')
-      //.classed('x_axis', true)
-      //.classed('axis', true)
-      //.classed('top', true)
-      //.attr('transform', 'translate(0,0)')
-      //.call(xAxisTop);
-
-      //content.append('g')
-      //.classed('x_axis', true)
-      //.classed('axis', true)
-      //.classed('bottom', true)
-      //.attr('transform', 'translate(0,' + (oBarAttributes.height * oData.length + 1) + ')')
-      //.call(xAxisBottom)
-      //.append('text')
-      //.classed('label', true)
-      //.attr('x', xScale(xMax) - 150)
-      //.attr('y', +30)
-      //.text(oSvgAttributes.x_axis_label);
 
       content.append('g')
       .classed('y_axis', true)
@@ -207,7 +187,6 @@ export default {
       .text(oSvgAttributes.y_axis_label)
       .attr('font-size', '13px');
 
-      //content.append('g')
       xAxisTopSvg.append('g')
       .classed('title', true)
       .append('text')
@@ -271,7 +250,8 @@ export default {
         if (oBarAttributes.width(d) < 0) {
           return xScale(oBarAttributes.width(d)) + oBarAttributes.x;
         }
-        if (oBarAttributes.x === xScale(0) + oBarAttributes.x) { // align bar to the left
+        if (oBarAttributes.x === xScale(0) + oBarAttributes.x) { 
+          // align bar to the left
           return oBarAttributes.x;
         }
         return xScale(0);
@@ -405,6 +385,14 @@ export default {
       //}
 
       this.drawn = true;
+    },
+    resetBarSelection: function () {
+      var cBlue = '#008FD3';
+      d3.select(this.$el).selectAll('g.bar rect')
+      .classed('selected', false)
+      .style('fill', () => cBlue)
+      .style('stroke', () => 'none');
+
     },
     toggleBar: function(element) {
       var bar = d3.select(this.$el).selectAll('g.bar rect').filter(d => d.SAP_SYNONYM === element.SAP_SYNONYM);
