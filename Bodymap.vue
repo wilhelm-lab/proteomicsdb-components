@@ -70,6 +70,10 @@ export default {
     selectedOrganism: {
       type: Object,
       default: () => {}
+    },
+    drawOnMount: {
+      type: Boolean,
+      default: false
     }
   },
   data: function () {
@@ -104,6 +108,7 @@ export default {
 
       switch (this.selectedOrganism.taxcode) {
         case 9606:
+        console.log('called');
         if(that.selectedGender === 'male') {
           d3.xml('/assets/bodyMap/man_new_with_IDs_final.svg').then((response) => { 
             d3.select(".bodymap").node().append(response.documentElement);
@@ -111,6 +116,7 @@ export default {
             if (that.data) { that.bind(); }
           });
         } else if (that.selectedGender === 'female') {
+          console.log('called');
           d3.xml('/assets/bodyMap/woman_new_with_IDs_final.svg').then((response) => { 
             d3.select(".bodymap").node().append(response.documentElement);
             that.svgLoaded = true;
@@ -328,18 +334,20 @@ export default {
               //var label = 'maximum intensity';
               // treat organ with many parts as one
               svgOrgan.attr('fill', organ_color)
-              .attr('stroke', '#787878');
-              /*.on("mouseenter", function (t) {
-                that.tip.html(function () {
-                  return "bla bla bla"
-                });
+              .attr('stroke', '#787878')
+              .on("mouseenter", function () {
+
+                d3.select(this).style("cursor", "pointer");
+                //that.tip.html(function () {
+                //  return "bla bla bla"
+                //});
 
                 // show the tooltip
-                that.tip.direction("n");
-                that.tip.offset([0,0]);
+                //that.tip.direction("n");
+                //that.tip.offset([0,0]);
 
-                that.tip.show(t, svgOrgan.node());
-              });*/
+                //that.tip.show(t, svgOrgan.node());
+              });
 // .tipsy({
   //   gravity: 's',
   //   html: true
@@ -476,6 +484,9 @@ export default {
     }
   },
   mounted: function () {
+    if ( this.drawOnMount && this.data) {
+      this.redraw();
+    }
   }
 }
 </script>

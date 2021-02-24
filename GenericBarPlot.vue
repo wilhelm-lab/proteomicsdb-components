@@ -245,9 +245,11 @@ export default {
           return d.ModelId
         })
         .on('mouseover', function () {
+          d3.select(this).style("cursor", "pointer");
           d3.select(this).attr('class', 'ClickBar Highlight')
         })
         .on('mouseout', function () {
+          d3.select(this).style("cursor", "default");
           d3.select(this).attr('class', 'ClickBar')
         })
         .on('click', function (clickEvent, f) {
