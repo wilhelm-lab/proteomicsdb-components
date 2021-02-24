@@ -1,5 +1,5 @@
 <template>
-  <v-row class="bodymapDiv" id="bodymapDiv">
+  <v-row class="bodymapDiv" id="bodymapDiv" justify="center">
     <v-btn-toggle v-if="selectedOrganism.taxcode === 9606"
                   v-model="selectedGender"
                   tile
@@ -87,21 +87,24 @@ export default {
   },
   watch: {
     data: function(newData) {
-      if (newData) {
+      if (newData && this.selectedOrganism) {
         this.redraw();
       }
     },
     selectedOrganism: function (oOrg) {
-      this.selectedGender = oOrg.taxcode === 9606 ? 'female' : null;
+      if(this.selectedOrganism.taxcode !== oOrg.taxcode) {
+        this.selectedGender = oOrg.taxcode === 9606 ? 'female' : null;
+      }
     },
     selectedGender: function () {
-      if (this.data) {
+      if (this.data && this.selectedOrganism) {
         this.redraw();
       }
     }
   },
   methods: {
     drawBodymap: function() {
+      
       var that = this;
       that.svgLoaded = false;
 
@@ -124,20 +127,20 @@ export default {
         case 3702:
         d3.xml('/assets/bodyMap/AraTh_body_map_with_IDS.svg').then((response) => { 
           d3.select(".bodymap").node().append(response.documentElement)
+          that.svgLoaded = true;
+          if (that.data) {
+            that.bind();
+          }
         });
-        that.svgLoaded = true;
-        if (that.data) {
-          that.bind();
-        }
         break;
         case 10090:
         d3.xml('/assets/bodyMap/Mouse_body_map_with_IDS.svg').then((response) => { 
           d3.select(".bodymap").node().append(response.documentElement)
+          that.svgLoaded = true;
+          if (that.data) {
+            that.bind();
+          }
         });
-        that.svgLoaded = true;
-        if (that.data) {
-          that.bind();
-        }
         break; 
       }
 
@@ -312,7 +315,7 @@ export default {
           if (that.data) {
             var related_tissues = that.data.filter(function(element) {
               if (element.SAP_SYNONYM) {
-                return element.SAP_SYNONYM.toLowerCase() == organ_id;
+                return element.SAP_SYNONYM.replace(':', '_').toLowerCase() == organ_id;
               }
               return false;
             });
@@ -338,7 +341,7 @@ export default {
 
                 d3.select(this).style("cursor", "pointer");
                 //that.tip.html(function () {
-                //  return "bla bla bla"
+                  //  return "bla bla bla"
                 //});
 
                 // show the tooltip
@@ -347,22 +350,22 @@ export default {
 
                 //that.tip.show(t, svgOrgan.node());
               });
-// .tipsy({
-  //   gravity: 's',
-  //   html: true
-// })
-// .attr('original-title', organ_name.replace('_', ' ') + '<hr>' + label + ': ' + max_intensity.toFixed(2));
+              // .tipsy({
+                //   gravity: 's',
+                //   html: true
+              // })
+              // .attr('original-title', organ_name.replace('_', ' ') + '<hr>' + label + ': ' + max_intensity.toFixed(2));
 
-// while (svgOrgan.children().length > 0) {
-  //   svgOrgan.attr('fill', organ_color)
-  //   .attr('stroke', '#787878')
-  //   .tipsy({
-    //     gravity: 's',
-    //     html: true
-  //   })
-  //   .attr('original-title', organ_name.replace('_', ' ') + '<hr>' + label + ': ' + max_intensity.toFixed(2));
-  //   svgOrgan = svgOrgan.children();
-// }
+              // while (svgOrgan.children().length > 0) {
+                //   svgOrgan.attr('fill', organ_color)
+                //   .attr('stroke', '#787878')
+                //   .tipsy({
+                  //     gravity: 's',
+                  //     html: true
+                //   })
+                //   .attr('original-title', organ_name.replace('_', ' ') + '<hr>' + label + ': ' + max_intensity.toFixed(2));
+                //   svgOrgan = svgOrgan.children();
+              // }
             }
           }
         });
@@ -370,7 +373,7 @@ export default {
         // bind click
         that.data.forEach(function(d) {
           if (d.SAP_SYNONYM) { // bind only organs for which the synonyms are in the data
-            var svgOrgan = d3.select('#' + d.SAP_SYNONYM.toLowerCase());
+            var svgOrgan = d3.select('#' + d.SAP_SYNONYM.replace(':', '_').toLowerCase());
 
             svgOrgan.style("visibility", "visible");
             svgOrgan.attr("class", 'unselected')
@@ -400,7 +403,7 @@ export default {
 
     },
     toggleOrgan: function (organName) {
-      var svgOrgan = d3.select('#'+organName);
+      var svgOrgan = d3.select('#'+organName.replace(':','_').toLowerCase());
       if (svgOrgan.node() !== null) {
         if (svgOrgan.attr('class') === 'selected') {
           svgOrgan.attr('class', 'unselected')
@@ -469,12 +472,12 @@ export default {
     },
     drawBodymapLegend: function() {
       var height = 720;
-      d3.select(this.$el).select('#bodymapLegendDiv').append('svg')
+      d3.select(this.$el).select('.bodymapLegendDiv').append('svg')
       .attr('width', 70)
       .attr('height', height);
     },
     redraw: function(){
-      d3.select('.bodymapDiv').selectAll('svg').remove();
+      d3.select('.bodymap').selectAll('svg').remove();
       this.drawBodymap();
       this.drawBodymapLegend();
     },
@@ -483,9 +486,9 @@ export default {
     }
   },
   mounted: function () {
-    if ( this.drawOnMount && this.data) {
-      this.redraw();
-    }
+//    if ( this.drawOnMount && this.data) {
+//      this.redraw();
+//    }
   }
 }
 </script>
