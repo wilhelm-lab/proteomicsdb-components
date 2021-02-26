@@ -477,7 +477,7 @@ export default {
       .attr('height', height);
     },
     redraw: function(){
-      d3.select('.bodymap').selectAll('svg').remove();
+      d3.select('.bodymapDiv').selectAll('svg').remove();
       this.drawBodymap();
       this.drawBodymapLegend();
     },
