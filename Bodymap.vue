@@ -376,6 +376,10 @@ export default {
 
               //var label = 'maximum intensity';
               // treat organ with many parts as one
+              if (svgOrgan.selectAll("*").nodes().length > 1) {
+                svgOrgan = svgOrgan.selectAll("*");
+              }
+
               svgOrgan.attr('fill', organ_color)
               .attr('stroke', '#787878')
               .on("mouseenter", function () {
@@ -415,6 +419,9 @@ export default {
         that.data.forEach(function(d) {
           if (d.SAP_SYNONYM) { // bind only organs for which the synonyms are in the data
             var svgOrgan = d3.select('#' + d.SAP_SYNONYM.replace(':', '_').toLowerCase());
+            if (svgOrgan.selectAll("*").nodes().length > 1) {
+              svgOrgan = svgOrgan.selectAll("*");
+            }
 
             svgOrgan.style("visibility", "visible");
             svgOrgan.attr("class", 'unselected')
@@ -446,6 +453,9 @@ export default {
     toggleOrgan: function (organName) {
       var svgOrgan = d3.select('#'+organName.replace(':','_').toLowerCase());
       if (svgOrgan.node() !== null) {
+        if (svgOrgan.selectAll("*").nodes().length > 1) {
+          svgOrgan = svgOrgan.selectAll("*");
+        }
         if (svgOrgan.attr('class') === 'selected') {
           svgOrgan.attr('class', 'unselected')
           .attr('display', 'inherit')
