@@ -142,6 +142,15 @@ export default {
           }
         });
         break; 
+        case 39947:
+        d3.xml('/assets/bodyMap/Rice_body_map_with_IDS_Final.svg').then((response) => { 
+          d3.select(".bodymap").node().append(response.documentElement)
+          that.svgLoaded = true;
+          if (that.data) {
+            that.bind();
+          }
+        });
+        break; 
       }
 
       d3.select('.bodymap').select('path').call(this.tip);
@@ -194,51 +203,51 @@ export default {
         };
         case 10090:
         return {
-          bto_0000047: 'adrenal gland',
-          bto_0000141: 'bone marrow',
+          bto_0000047: 'adrenal_gland',
+          bto_0000141: 'bone_marrow',
           bto_0000142: 'brain',
-          bto_0000156: 'brown adipose tissue',
-          bto_0000214: 'cell culture',
+          bto_0000156: 'brown_adipose_tissue',
+          bto_0000214: 'cell_culture',
           bto_0000232: 'cerebellum',
           bto_0000243: 'vagina',
-          bto_0000293: 'occipital lobe',
+          bto_0000293: 'occipital_lobe',
           bto_0000365: 'duodenum',
           bto_0000379: 'embryo',
           bto_0000408: 'epididymis',
           bto_0000439: 'eye',
-          bto_0000484: 'frontal lobe',
+          bto_0000484: 'frontal_lobe',
           bto_0000562: 'heart',
           bto_0000601: 'hippocampus',
-          bto_0000651: 'small intestine',
+          bto_0000651: 'small_intestine',
           bto_0000671: 'kidney',
           bto_0000672: 'hindbrain',
-          bto_0000706: 'large intestine',
+          bto_0000706: 'large_intestine',
           bto_0000759: 'liver',
           bto_0000763: 'lung',
-          bto_0000784: 'lymph node',
-          bto_0000817: 'mammary gland',
+          bto_0000784: 'lymph_node',
+          bto_0000817: 'mammary_gland',
           bto_0000959: 'esophagus',
-          bto_0000961: 'olfactory bulb',
+          bto_0000961: 'olfactory_bulb',
           bto_0000975: 'ovary',
           bto_0000988: 'pancreas',
-          bto_0001103: 'skeletal muscle',
-          bto_0001129: 'prostate gland',
-          bto_0001203: 'salivary gland',
-          bto_0001234: 'seminal vesicle',
+          bto_0001103: 'skeletal_muscle',
+          bto_0001129: 'prostate_gland',
+          bto_0001203: 'salivary_gland',
+          bto_0001234: 'seminal_vesicle',
           bto_0001253: 'skin',
-          bto_0001279: 'spinal cord',
+          bto_0001279: 'spinal_cord',
           bto_0001281: 'spleen',
           bto_0001284: 'femur',
           bto_0001307: 'stomach',
-          bto_0001355: 'temporal lobe',
+          bto_0001355: 'temporal_lobe',
           bto_0001363: 'testis',
           bto_0001374: 'thymus',
-          bto_0001379: 'thyroid gland',
+          bto_0001379: 'thyroid_gland',
           bto_0001385: 'tongue',
           bto_0001388: 'trachea',
-          bto_0001418: 'urinary bladder',
+          bto_0001418: 'urinary_bladder',
           bto_0001424: 'uterus',
-          bto_0001456: 'white adipose tissue'
+          bto_0001456: 'white_adipose_tissue'
         };
         case 3702:
         return {po_0009046: 'flower',
@@ -263,6 +272,38 @@ export default {
           po_0030112: 'pedicel',
           // po_0025281: 'pollen',
         po_0025280: 'pollen'};
+        case 39947:
+        return {
+          po_0000009: 'cultured_plant_callus',
+          po_0000042: 'shoot-borne_root',
+          po_0000046: 'seminal_root',
+          po_0025281: 'L_mature_pollen_stage',
+          po_0004506: 'developing_seed_stage',
+          po_0004712: 'axillary_vegetative_bud',
+          po_0004715: 'terminal_inflorescence_bud',
+          po_0005004: 'shoot_axis_node',
+          po_0006012: 'leaf_collar',
+          po_0007065: 'LP_05_five_leaves_visible_stage',
+          po_0007094: 'LP_01_one_leaf_visible_stage',
+          po_0007106: 'LP_03_three_leaves_visible_stage',
+          po_0007115: 'LP_04_four_leaves_visible_stage',
+          po_0007131: 'seedling_development_stage',
+          po_0009005: 'root',
+          po_0009009: 'plant_embryo',
+          po_0009030: 'carpel',
+          po_0009036: 'lodicule',
+          po_0009066: 'anther',
+          po_0020031: 'radicle',
+          po_0020033: 'coleoptile',
+          po_0020037: 'mesocotyl',
+          po_0020039: 'leaf_lamina',
+          po_0020103: 'flag_leaf',
+          po_0020104: 'leaf_sheath',
+          po_0025034: 'leaf',
+          po_0025100: 'shoot_axis_internode_elongation_zone',
+          po_0025327: 'keel',
+          po_0025280: 'pollen'
+        };
         default:
         return [];
       }
