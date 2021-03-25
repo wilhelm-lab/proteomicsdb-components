@@ -40,6 +40,14 @@ export default {
       type: Number,
       default: undefined
     },
+    endpointSuperNodeInfo: {
+      type: String,
+      default: undefined
+    },
+    endpointMarker: {
+      type: String,
+      default: undefined
+    },
     endpointAccession: {
       type: String,
       default: undefined
@@ -280,7 +288,7 @@ export default {
       var that = this;
       var defs = svg.append('svg:defs');
 
-      d3.json('https://www.proteomicsdb.org/logic/pathways/getAllMarkers.xsjs', function(error, data) {
+      d3.json(this.endpointMarker, function(error, data) {
         if (error) {
           throw error;
         }
@@ -1029,7 +1037,7 @@ seek_and_hide();
               }).join(',');
               // sry for that - it works !
               if (sSelectedNodes !== '') {
-                d3.json('https://www.proteomicsdb.org/logic/pathways/getSuperNodeInfo.xsjs?accession_id=__parameter1__'.replace('__parameter1__', sSelectedNodes), function(error, data) {
+                d3.json(that.endpointSuperNodeInfo+'?accession_id=__parameter1__'.replace('__parameter1__', sSelectedNodes), function(error, data) {
                   data.sort(function(a, b) {
                     return a.GeneName.localeCompare(b.GeneName);
                   });
