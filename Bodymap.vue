@@ -104,20 +104,20 @@ export default {
   },
   methods: {
     drawBodymap: function() {
-      
+      var prefix = this.$store.state.host == '' ? '/vue' : ''; 
       var that = this;
       that.svgLoaded = false;
 
       switch (this.selectedOrganism.taxcode) {
         case 9606:
         if(that.selectedGender === 'male') {
-          d3.xml('/assets/bodyMap/man_new_with_IDs_final.svg').then((response) => { 
+          d3.xml(prefix+'/assets/bodyMap/man_new_with_IDs_final.svg').then((response) => { 
             d3.select(".bodymap").node().append(response.documentElement);
             that.svgLoaded = true;
             if (that.data) { that.bind(); }
           });
         } else if (that.selectedGender === 'female') {
-          d3.xml('/assets/bodyMap/woman_new_with_IDs_final.svg').then((response) => { 
+          d3.xml(prefix+'/assets/bodyMap/woman_new_with_IDs_final.svg').then((response) => { 
             d3.select(".bodymap").node().append(response.documentElement);
             that.svgLoaded = true;
             if (that.data) { that.bind(); }
@@ -125,7 +125,7 @@ export default {
         }
         break;
         case 3702:
-        d3.xml('/assets/bodyMap/AraTh_body_map_with_IDS.svg').then((response) => { 
+        d3.xml(prefix+'/assets/bodyMap/AraTh_body_map_with_IDS.svg').then((response) => { 
           d3.select(".bodymap").node().append(response.documentElement)
           that.svgLoaded = true;
           if (that.data) {
@@ -134,7 +134,7 @@ export default {
         });
         break;
         case 10090:
-        d3.xml('/assets/bodyMap/Mouse_body_map_with_IDS.svg').then((response) => { 
+        d3.xml(prefix+'/assets/bodyMap/Mouse_body_map_with_IDS.svg').then((response) => { 
           d3.select(".bodymap").node().append(response.documentElement)
           that.svgLoaded = true;
           if (that.data) {
@@ -143,7 +143,7 @@ export default {
         });
         break; 
         case 39947:
-        d3.xml('/assets/bodyMap/Rice_body_map_with_IDS_Final.svg').then((response) => { 
+        d3.xml(prefix+'/assets/bodyMap/Rice_body_map_with_IDS_Final.svg').then((response) => { 
           d3.select(".bodymap").node().append(response.documentElement)
           that.svgLoaded = true;
           if (that.data) {
