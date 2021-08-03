@@ -1,6 +1,5 @@
 <template>
-  <div id="datahistogram"
-    class="datahistclass"
+  <div class="datahistclass"
     >
   </div>
 </template>
@@ -21,6 +20,14 @@ export default {
     xlabel: {
       type: String,
       default: ''
+    },
+    plotHistogram: {
+      type: Boolean,
+      default: true
+    },
+    plotKDE: {
+      type: Boolean,
+      default: false
     },
     markMedianBar: {
       type: Boolean,
@@ -88,11 +95,13 @@ export default {
       var y = d3.scaleLinear()
         .range([height, 0])
       
+      var thresholds = x.ticks(nclass - 1)
+      
       // set the parameters for the histogram
       var histogram = d3.histogram()
         .value(function (d) { return d })
         .domain(x.domain())
-        .thresholds(x.ticks(nclass - 1))
+        .thresholds(thresholds)
       
       nclass = x.ticks(nclass - 1).length
       
@@ -100,34 +109,57 @@ export default {
       // append a 'group' element to 'svg'
       // moves the 'group' element to the top left margin
       var svg = d3.select(this.$el).append('svg')
+        .attr('class', 'HistogramContainer')
         .attr('width', width + this.margin.left + this.margin.right)
         .attr('height', height + this.margin.top + this.margin.bottom)
         .append('g')
         .attr('transform',
           'translate(' + this.margin.left + ',' + this.margin.top + ')')
-
+      
       // group the data for the bars
       var bins = histogram(sortedData)
-
+      var maxFrequency = d3.max(bins, function (d) { return d.length })
+      
       // Scale the range of the data in the y domain
-      y.domain([0, d3.max(bins, function (d) { return d.length })])
-
-      var i = 0
-      // append the bar rectangles to the svg element
-      svg.selectAll('rect')
-        .data(bins)
-        .enter()
-        .append('rect')
-        .attr('class', 'bar')
-        .attr('x', 1)
-        .attr('transform', function (d) {
-          return 'translate(' + x(d.x0) + ',' + y(d.length) + ')'
-        })
-        .attr('width', function (d) { return x(d.x1) - x(d.x0) - 1 })
-        .attr('height', function (d) { return height - y(d.length) })
-        .attr('id', function () { return ('bar' + (i++)) })
-        .style('fill', '#CCCCCC') // blue: #0073CF
-
+      y.domain([0, maxFrequency])
+      
+      if (this.plotHistogram) {
+        var i = 0
+        // append the bar rectangles to the svg element
+        svg.selectAll('rect')
+          .data(bins)
+          .enter()
+          .append('rect')
+          .attr('class', 'bar')
+          .attr('x', 1)
+          .attr('transform', function (d) {
+            return 'translate(' + x(d.x0) + ',' + y(d.length) + ')'
+          })
+          .attr('width', function (d) { return x(d.x1) - x(d.x0) - 1 })
+          .attr('height', function (d) { return height - y(d.length) })
+          .attr('id', function () { return ('bar' + (i++)) })
+          .style('fill', '#CCCCCC') // blue: #0073CF
+      }
+      
+      if (this.plotKDE) {
+        // Kernel density estimate graph
+        var bandwidth = (maxX - minX) / nclass * 2
+        var density = this.kde(this.epanechnikov(), thresholds, sortedData, bandwidth)
+        
+        var line = d3.line()
+          .curve(d3.curveBasis)
+          .x(function (d) { return x(d[0]) })
+          .y(function (d) { return y(d[1]) })
+        
+        svg.append("path")
+          .datum(density)
+          .attr("fill", "none")
+          .attr("stroke", "#000")
+          .attr("stroke-width", 1.5)
+          .attr("stroke-linejoin", "round")
+          .attr("d", line);
+      }
+      
       // add the x Axis
       svg.append('g')
         .attr('transform', 'translate(0,' + height + ')')
@@ -153,7 +185,7 @@ export default {
         .text('Frequency')
         
       svg.append('g')
-        .attr('id', 'lines')
+        .attr('class', 'lines')
 
       // colour median bar red
       if (this.markMedianBar) {
@@ -165,6 +197,14 @@ export default {
         svg.select('#bar' + medBarId)
           .style('fill', '#C4071B')
       }
+
+    },
+    kde: function(kernel, thresholds, data, bandwidth) {
+      var binWidth = (thresholds[1] - thresholds[0])
+      return thresholds.map(t => [t, d3.sum(data, function (d) { return kernel((t - d) / bandwidth) / bandwidth }) * binWidth]);
+    },
+    epanechnikov: function() {
+      return function(x) { return Math.abs(x) <= 1 ? 0.75 * (1 - x * x) : 0 }
     },
     drawLines: function (oLines) {
       var width = this.minWidth - this.margin.left - this.margin.right
@@ -178,16 +218,14 @@ export default {
         .domain([minX, maxX])
         .rangeRound([0, width])
       
-      d3.select('#lines')
-        .selectAll('line')
+      var allLines = d3.select(this.$el).select('.lines')
+      allLines.selectAll('line')
         .remove()
       
-      d3.select('#lines')
-        .selectAll('path')
+      allLines.selectAll('path')
         .remove()
       
-      var lines = d3.select('#lines')
-        .selectAll('line')
+      var lines = allLines.selectAll('line')
         .data(oLines).enter()
       
       lines.append("line")
@@ -257,17 +295,6 @@ export default {
 }
 </script>
 
-<style scss>
-
-.axis {
-    font: 10px sans-serif;
-}
-
-.axis path,
-.axis line {
-    fill: none;
-    stroke: #000;
-    shape-rendering: crispEdges;
-}
-
+<style>
+@import './GenericHistogram.css.prdb'
 </style>

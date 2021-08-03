@@ -1,0 +1,11 @@
+
+.HistogramContainer {
+    font: 12px sans-serif;
+}
+
+HistogramContainer .axis path,
+HistogramContainer .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+}
