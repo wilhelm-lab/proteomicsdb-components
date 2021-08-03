@@ -6,12 +6,13 @@
                 :column-auto-width="true"
                 :allow-column-resizing="true"
     >
-      <DxColumn caption="Gene Name(s)" data-type="string" :calculate-cell-value="str => str.geneName.replaceAll(',', ', ')"  />
-      <DxColumn caption="Uniprot ID(s)" data-type="string" :calculate-cell-value="str => str.uniprotId.replaceAll(',', ', ')"/>
-      <DxColumn caption="Position" data-type="string" data-field="position"/>
-      <DxColumn caption="#LT References" data-type="string" data-field="lowThroughputRefs"/>
-      <DxColumn caption="#HT References" data-type="string" data-field="highThroughputRefs"/>
-
+      <DxColumn caption="Gene Name(s)" data-type="string" :allow-sorting="true"
+                :calculate-cell-value="str => str.geneName.replaceAll(',', ', ')"/>
+      <DxColumn caption="Uniprot ID(s)" data-type="string" :allow-sorting="true"
+                :calculate-cell-value="str => str.uniprotId.replaceAll(',', ', ')"/>
+      <DxColumn caption="Position" data-type="string" :allow-sorting="true" data-field="position"/>
+      <DxColumn caption="#LT References" data-type="string" :allow-sorting="true" data-field="lowThroughputRefs"/>
+      <DxColumn caption="#HT References" data-type="string" :allow-sorting="true" data-field="highThroughputRefs"/>
 
 
     </DxDataGrid>
