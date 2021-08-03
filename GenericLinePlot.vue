@@ -260,7 +260,11 @@ export default {
         xAxis = d3.axisBottom(x);
       } else {
         xAxis = d3.axisBottom(x).ticks( this.kinobeads ? 10 : 8, function ticks(digit) {
-          return digit;
+          if (digit < 1) {
+            return d3.format("1~e")(digit);
+          } else {
+            return d3.format("~s")(digit);
+          }
         });
       }
 
