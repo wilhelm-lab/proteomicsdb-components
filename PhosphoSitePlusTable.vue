@@ -15,6 +15,7 @@
                 cell-template="pspTemplate"/>
       <DxColumn caption="#LT References" data-type="string" :allow-sorting="true" data-field="lowThroughputRefs"/>
       <DxColumn caption="#HT References" data-type="string" :allow-sorting="true" data-field="highThroughputRefs"/>
+      <DxColumn caption="Associated Kinases" data-type="string" :allow-sorting="true" data-field="kinases"/>
 
       <template #pspTemplate="{ data }">
         <a :href="'http://www.phosphosite.org/uniprotAccAction?id=' + data.value.uniprotId " target="_blank">
