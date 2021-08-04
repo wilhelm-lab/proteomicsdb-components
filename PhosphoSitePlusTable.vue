@@ -7,13 +7,20 @@
                 :allow-column-resizing="true"
     >
       <DxColumn caption="Gene Name(s)" data-type="string" :allow-sorting="true"
-                :calculate-cell-value="str => str.geneName.replaceAll(',', ', ')"/>
+                :calculate-cell-value="d => d.geneName.replaceAll(',', ', ')"/>
       <DxColumn caption="Uniprot ID(s)" data-type="string" :allow-sorting="true"
-                :calculate-cell-value="str => str.uniprotId.replaceAll(',', ', ')"/>
-      <DxColumn caption="Position" data-type="string" :allow-sorting="true" data-field="position"/>
+                :calculate-cell-value="d => d.uniprotId.replaceAll(',', ', ')"/>
+      <DxColumn caption="Position" data-type="string" :allow-sorting="true"
+                :calculate-cell-value="d => {return {uniprotId: d.uniprotId, position: d.position}}"
+                cell-template="pspTemplate"/>
       <DxColumn caption="#LT References" data-type="string" :allow-sorting="true" data-field="lowThroughputRefs"/>
       <DxColumn caption="#HT References" data-type="string" :allow-sorting="true" data-field="highThroughputRefs"/>
 
+      <template #pspTemplate="{ data }">
+        <a :href="'http://www.phosphosite.org/uniprotAccAction?id=' + data.value.uniprotId " target="_blank">
+          {{ data.value.position }}</a>
+
+      </template>
 
     </DxDataGrid>
   </div>
