@@ -252,7 +252,7 @@ export default {
           d3.select(this).style("cursor", "default");
           d3.select(this).attr('class', 'ClickBar')
         })
-        .on('click', function (clickEvent, f) {
+        .on('click', function (f) {
           var oSelectedModelIds = that.selectedModelIds
           if (oSelectedModelIds) {
             var aSelectedModelIds = oSelectedModelIds.data

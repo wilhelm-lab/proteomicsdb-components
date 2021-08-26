@@ -208,8 +208,8 @@ export default {
               })
               .attr('cy', '370')
               .attr('r', 4)
-              .style('fill', function(d, key) {
-                  return that.selectedKey === key ? '#007dbb' : 'white';
+              .style('fill', function(d) {
+                  return that.selectedKey === d ? '#007dbb' : 'white';
               });
 
           radioButtonGroup.append('circle')
@@ -227,11 +227,11 @@ export default {
                   d3.select(this).style('stroke', 'grey');
                   d3.select(this).style('stroke-width', 2);
               })
-              .on('click', function(d, key) {
-                  that.selectedKey = key;
+              .on('click', function(d) {
+                  that.selectedKey = d;
                   d3.selectAll('.radioFakeInner').style('fill', 'white');
                   d3.selectAll('.radioFakeInner').filter(function(e) {
-                      return key == e;
+                      return d == e;
                   }).style('fill', '#007dbb');
                   that.fireKeyChange();
               });
