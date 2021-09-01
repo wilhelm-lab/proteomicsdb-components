@@ -252,7 +252,10 @@ export default {
           d3.select(this).style("cursor", "default");
           d3.select(this).attr('class', 'ClickBar')
         })
-        .on('click', function (f) {
+        .on('click', function (clickEvent, f) {
+                    //Temporarily disabling the new d3v5 stuff
+                    // .on('click', function (f) {
+
           var oSelectedModelIds = that.selectedModelIds
           if (oSelectedModelIds) {
             var aSelectedModelIds = oSelectedModelIds.data

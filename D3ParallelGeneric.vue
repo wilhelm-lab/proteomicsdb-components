@@ -116,7 +116,11 @@ export default {
           // ic 50 array in different order than BIC array
           for (var i = 0; i < dat.length; i++) {
               dat[i].data = dat[i].data.sort(function(a, b) {
-                  return parseInt(a.ModelId) - parseInt(b.ModelId);
+                  //There might be multiple modelIds, separated by ';' - these are ALSO not sorted
+                  //So split them, sort them, and take the first one - then compare the two
+                  let aFirstModelId = a.ModelId.split(";").sort()[0]
+                  let bFirstModelId = b.ModelId.split(";").sort()[0]
+                  return parseInt(aFirstModelId) - parseInt(bFirstModelId);
               });
           }
 
@@ -208,8 +212,12 @@ export default {
               })
               .attr('cy', '370')
               .attr('r', 4)
-              .style('fill', function(d) {
-                  return that.selectedKey === d ? '#007dbb' : 'white';
+              .style('fill', function(d, key) {
+                 return that.selectedKey === key ? '#007dbb' : 'white';
+                 //Temporarily disabling the new d3v5 stuff
+            //   .style('fill', function(d) {
+            //       return that.selectedKey === d ? '#007dbb' : 'white';
+
               });
 
           radioButtonGroup.append('circle')
@@ -227,11 +235,14 @@ export default {
                   d3.select(this).style('stroke', 'grey');
                   d3.select(this).style('stroke-width', 2);
               })
-              .on('click', function(d) {
-                  that.selectedKey = d;
+              .on('click', function(d, key) {
+                  that.selectedKey = key;
+                 //Temporarily disabling the new d3v5 stuff
+            //   .on('click', function(d) {
+            //       that.selectedKey = d;
                   d3.selectAll('.radioFakeInner').style('fill', 'white');
                   d3.selectAll('.radioFakeInner').filter(function(e) {
-                      return d == e;
+                      return key == e;
                   }).style('fill', '#007dbb');
                   that.fireKeyChange();
               });
