@@ -319,15 +319,35 @@ export default {
           let iterator = aProperties.length === 1 ? 0 : i ;
           return oCurveStyleMapping[aProperties[iterator].curveId || i].dash;
         })
-        .on('mouseover', function() {
+        .attr('d', line);
+
+        //Add thicker invisible lines for better mouseover functionality
+        svg.append('g')
+        .attr('class', 'invisibleLines')
+        .selectAll('.invisibleLines')
+        .data(aData).enter()
+        .append('path').filter(function(f) {
+          return f.filter(function(g) {
+            return g[1] > 0;
+          });
+        })
+         .attr('id', function(d, i) {
+          let iterator = aProperties.length === 1 ? 0 : i ;
+          let postfix = aProperties[iterator].curveId || i;
+          return 'invisibleLine-' + postfix;
+        })
+          .on('mouseover', function() {
           var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
           that.highlightMouseOver(sId, x, y);
+          that.$emit('mouseover-event', sId)
         })
         .on('mouseout', function() {
           var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
           that.unHighlightMouseOver(sId, x, y);
+          that.$emit('mouseout-event', sId)
         })
         .attr('d', line);
+
 
         if (!this.hideErrorBars) {
           var errorGroup = svg.selectAll('g.error').attr('class', 'errorGroup').data(aParameters.map(function(x, i) {
@@ -518,6 +538,7 @@ export default {
           .on('mouseover', function() {
             var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
             that.highlightMouseOver(sId, x, y);
+            that.$emit('mouseover-event', sId)
           })
           .on('mouseout', function() {
             var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
@@ -604,8 +625,10 @@ export default {
         .attr('y', LegendRowHeight - 1)
         .attr('class', 'legendText')
         .on('mouseover', function() {
+          //This does not seem to be ever triggered
           var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
           that.highlightMouseOver(sId, x, y);
+          that.$emit('mouseover-event', sId)
         })
         .on('mouseout', function() {
           var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly

@@ -25,6 +25,14 @@
   stroke-linejoin: round;
   stroke-linecap: round;
 }
+
+.LinePlot .invisibleLines {
+  fill: none;
+  stroke-width: 10px;
+  stroke: red; /* It doesn't work if I put 'none' here */
+  opacity: 0;
+}
+
 .LinePlot .legend .highlightLines,
 .LinePlot .highlightLines {
   fill: none;
