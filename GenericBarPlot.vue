@@ -232,7 +232,7 @@ export default {
           return labelText
         })
       // clickBar
-      bar.append('rect')
+      let barRect = bar.append('rect')
         .attr('class', () => {
           return 'ClickBar'
         })
@@ -251,11 +251,17 @@ export default {
         .on('mouseout', function () {
           d3.select(this).style("cursor", "default");
           d3.select(this).attr('class', 'ClickBar')
-        })
-        .on('click', function (clickEvent, f) {
-                    //Temporarily disabling the new d3v5 stuff
-                    // .on('click', function (f) {
+        });
 
+        //TOPAS Explorer uses d3v6, ProteomicsDB uses D3v5. This if/else makes the component compatible with both
+        if(d3.version.startsWith(6)){
+          barRect.on('click', (clickEvent, f) => onBarClick(that, f))
+        }
+        else{
+          barRect.on('click', (f) => onBarClick(that, f))
+        }
+
+        function onBarClick(that, f) {
           var oSelectedModelIds = that.selectedModelIds
           if (oSelectedModelIds) {
             var aSelectedModelIds = oSelectedModelIds.data
@@ -321,7 +327,7 @@ export default {
             AttributeType: oData.AttributeType,
             SelectedModelIds: that.selectedModelIds
           })
-        })
+        }
 
       bar.append('line').attr('class', 'pointer')
       bar.append('line').attr('class', 'end_left')

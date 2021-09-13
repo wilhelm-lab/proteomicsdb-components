@@ -212,15 +212,13 @@ export default {
               })
               .attr('cy', '370')
               .attr('r', 4)
-              .style('fill', function(d, key) {
-                 return that.selectedKey === key ? '#007dbb' : 'white';
-                 //Temporarily disabling the new d3v5 stuff
-            //   .style('fill', function(d) {
-            //       return that.selectedKey === d ? '#007dbb' : 'white';
+
+              .style('fill', function(d) {
+                  return that.selectedKey === d ? '#007dbb' : 'white';
 
               });
 
-          radioButtonGroup.append('circle')
+          let radioButtonOuter = radioButtonGroup.append('circle')
               .attr('class', 'radioButton outerButton')
               .attr('cx', function(d) {
                   return pc.xscale(d);
@@ -234,18 +232,27 @@ export default {
               .on('mouseout', function() {
                   d3.select(this).style('stroke', 'grey');
                   d3.select(this).style('stroke-width', 2);
-              })
-              .on('click', function(d, key) {
+              });
+              //TOPAS Explorer uses d3v6, ProteomicsDB uses D3v5. This if/else makes the component compatible with both
+              if(d3.version.startsWith(6)){
+                radioButtonOuter.on('click', function(d, key) {
                   that.selectedKey = key;
-                 //Temporarily disabling the new d3v5 stuff
-            //   .on('click', function(d) {
-            //       that.selectedKey = d;
                   d3.selectAll('.radioFakeInner').style('fill', 'white');
                   d3.selectAll('.radioFakeInner').filter(function(e) {
                       return key == e;
                   }).style('fill', '#007dbb');
                   that.fireKeyChange();
+                });
+              }else{
+                radioButtonOuter.on('click', function(d) {
+                  that.selectedKey = d;
+                  d3.selectAll('.radioFakeInner').style('fill', 'white');
+                  d3.selectAll('.radioFakeInner').filter(function(e) {
+                      return d == e;
+                  }).style('fill', '#007dbb');
+                  that.fireKeyChange();
               });
+              }
 
           // move labels
           d3.selectAll('text.label').attr('transform', 'translate(0,-15)');
