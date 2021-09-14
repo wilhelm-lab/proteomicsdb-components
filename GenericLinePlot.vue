@@ -346,6 +346,10 @@ export default {
           that.unHighlightMouseOver(sId, x, y);
           that.$emit('mouseout-event', sId)
         })
+        .on('click', function() {
+          var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
+          that.$emit('click-event', sId)
+        })
         .attr('d', line);
 
 
@@ -543,7 +547,12 @@ export default {
           .on('mouseout', function() {
             var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
             that.unHighlightMouseOver(sId, x, y);
+            that.$emit('mouseout-event', sId)
           })
+          .on('click', function() {
+          var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
+          that.$emit('click-event', sId)
+        })
           .style('fill', function() {
             let iterator = aProperties.length === 1 ? 0 : i ;
             return oCurveStyleMapping[aProperties[iterator].curveId || i].color;
@@ -576,7 +585,7 @@ export default {
         .attr('id', function(d, i) {
           return 'CETSALegend-' + i;
         })
-        .attr('class', 'legend').attr('ModelId', function(d, i) {
+        .attr('ModelId', function(d, i) {
           return d.curveId || i;
         })
         .attr('transform', function(d, i) {
@@ -601,6 +610,34 @@ export default {
           let si = d.curveId || i; 
           return oCurveStyleMapping[si].color;
         });
+          
+          
+          
+          legend.append('path')
+        .attr('class', 'invisibleLines')
+        .attr('id', function(d, i) {
+          let si = d.curveId || i; 
+          return 'dotsLegendInvisible-' + si;
+        })
+        .attr('d', function(d, i) {
+          let si = d.curveId || i; 
+          return oCurveStyleMapping[si].marker;
+        })
+        .attr('transform', 'translate(' + LegendLineWidth / 2 + ',' + LegendRowHeight / 2 + ') scale(0.75)')
+        .on('mouseover', function() {
+          var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
+          that.highlightMouseOver(sId, x, y);
+          that.$emit('mouseover-event', sId)
+        })
+        .on('mouseout', function() {
+            var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
+            that.unHighlightMouseOver(sId, x, y);
+            that.$emit('mouseout-event', sId)
+          })
+        .on('click', function() {
+          var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
+          that.$emit('click-event', sId)
+        });
 
         legend.append('line')
         .attr('x1', 0)
@@ -624,16 +661,6 @@ export default {
         .attr('x', LegendLineWidth + LegendOffset)
         .attr('y', LegendRowHeight - 1)
         .attr('class', 'legendText')
-        .on('mouseover', function() {
-          //This does not seem to be ever triggered
-          var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
-          that.highlightMouseOver(sId, x, y);
-          that.$emit('mouseover-event', sId)
-        })
-        .on('mouseout', function() {
-          var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
-          that.unHighlightMouseOver(sId, x, y);
-        })
         .attr('id', function(d, i) {
           let si = aProperties[i].curveId || i;
           return 'legendText-' + si;
@@ -641,7 +668,24 @@ export default {
         .text(function(d) {
           let sTreatment = d.TREATMENT || 'Replicate';
           return that.bCETSA ? sTreatment + ' ' + d.biologicalReplicate : sTreatment;
+        }) 
+        .on('mouseover', function() {
+          //This does not seem to be ever triggered
+          var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
+          that.highlightMouseOver(sId, x, y);
+          that.$emit('mouseover-event', sId)
+        })
+        .on('mouseout', function() {
+            var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
+            that.unHighlightMouseOver(sId, x, y);
+            that.$emit('mouseout-event', sId)
+          })
+        .on('click', function() {
+          var sId = d3.select(this).attr('id').split('-')[1]; // next time: we do data binding correctly
+          that.$emit('click-event', sId)
         });
+
+       
       }
       /* TODO: convert this to Vue.js
       for (i = 0; i < aProperties.length; i++) {
